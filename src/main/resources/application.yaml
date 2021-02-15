@@ -1,0 +1,19 @@
+spring:
+    data:
+        web:
+          pageable:
+              one-indexed-parameters: true # Whether to expose and assume 1-based page number indexes.
+              default-page-size: 10
+    elasticsearch:
+        rest:
+            uris: http://localhost:9200
+
+application:
+    glFlow:
+        serverUrl: http://localhost:8096
+    cors:
+        allowed-origins: "*"
+        allowed-methods: GET, PUT, POST, DELETE, OPTIONS
+        allowed-headers: "*"
+        exposed-headers: "authorization, content-type, date, connection, transfer-encoding, x-application-context, x-content-type-options, x-xss-protection"
+        max-age: 1800
