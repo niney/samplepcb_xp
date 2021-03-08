@@ -78,6 +78,7 @@ public class CoolElasticUtils {
         List<Map<String, Object>> sourceList = new ArrayList<>();
         for (SearchHit hit : response.getHits().getHits()) {
             Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+            sourceAsMap.put("id", hit.getId());
             Map<String, Object> hfList = new HashMap<>();
             hit.getHighlightFields().forEach((field, highlightField) -> {
                 String fragments = Arrays.stream(highlightField.getFragments()).map(s -> String.format("%s ...", s)).collect(Collectors.joining());

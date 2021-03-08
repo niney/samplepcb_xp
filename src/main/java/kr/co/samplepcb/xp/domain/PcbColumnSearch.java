@@ -16,6 +16,8 @@ public class PcbColumnSearch {
     @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true)
     private String colName;
     @Field(type = FieldType.Keyword)
+    private String colNameKeyword;
+    @Field(type = FieldType.Keyword)
     private Integer target;
     private List<Double> colNameVector;
     private Double glScore;
@@ -34,6 +36,14 @@ public class PcbColumnSearch {
 
     public void setColName(String colName) {
         this.colName = colName;
+    }
+
+    public String getColNameKeyword() {
+        return colNameKeyword;
+    }
+
+    public void setColNameKeyword(String colNameKeyword) {
+        this.colNameKeyword = colNameKeyword;
     }
 
     public Integer getTarget() {

@@ -5,6 +5,7 @@ public class PcbColumnSearchVM {
     private String id;
     private Integer columnIdx;
     private String colName;
+    private String colNameKeyword;
     private Integer target;
     private Double glScore;
 
@@ -32,6 +33,14 @@ public class PcbColumnSearchVM {
 
     public void setColName(String colName) {
         this.colName = colName;
+    }
+
+    public String getColNameKeyword() {
+        return colNameKeyword;
+    }
+
+    public void setColNameKeyword(String colNameKeyword) {
+        this.colNameKeyword = colNameKeyword;
     }
 
     public Integer getTarget() {

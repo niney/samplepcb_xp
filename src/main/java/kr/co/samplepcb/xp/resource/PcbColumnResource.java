@@ -3,6 +3,7 @@ package kr.co.samplepcb.xp.resource;
 import coolib.common.CCResult;
 import coolib.common.QueryParam;
 import kr.co.samplepcb.xp.domain.PcbColumnSearch;
+import kr.co.samplepcb.xp.pojo.PcbColumnSearchVM;
 import kr.co.samplepcb.xp.pojo.PcbSentenceVM;
 import kr.co.samplepcb.xp.repository.PcbColumnSearchRepository;
 import kr.co.samplepcb.xp.service.PcbColumnService;
@@ -41,8 +42,8 @@ public class PcbColumnResource {
     }
 
     @GetMapping("/_search")
-    public CCResult search(@PageableDefault Pageable pageable, QueryParam queryParam) {
-        return this.pcbColumnService.search(pageable, queryParam);
+    public CCResult search(@PageableDefault Pageable pageable, QueryParam queryParam, PcbColumnSearchVM pcbColumnSearchVM) {
+        return this.pcbColumnService.search(pageable, queryParam, pcbColumnSearchVM);
     }
 
     @GetMapping("/_searchSentence")
@@ -58,5 +59,15 @@ public class PcbColumnResource {
     @GetMapping("/_searchPartNumber")
     public CCResult reindexAllManufacturer(String partNumber) throws InterruptedException {
         return this.pcbColumnService.searchPartNumber(partNumber);
+    }
+
+    @PostMapping("/_indexing")
+    public CCResult indexing(PcbColumnSearchVM pcbColumnSearchVM) {
+        return this.pcbColumnService.indexing(pcbColumnSearchVM);
+    }
+
+    @GetMapping("/_delete")
+    public CCResult delete(String id) {
+        return this.pcbColumnService.delete(id);
     }
 }

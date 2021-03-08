@@ -29,6 +29,7 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -46,7 +47,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 @Service
 public class PcbColumnService {
@@ -108,12 +110,13 @@ public class PcbColumnService {
                             break;
                     }
                 }
-                PcbColumnSearch findPcbColumn = this.pcbColumnSearchRepository.findByColName(list);
+                PcbColumnSearch findPcbColumn = this.pcbColumnSearchRepository.findByColNameKeyword(list);
                 if(findPcbColumn != null) {
                     continue;
                 }
                 PcbColumnSearch pcbColumnSearch = new PcbColumnSearch();
                 pcbColumnSearch.setColName(list);
+                pcbColumnSearch.setColNameKeyword(list);
                 pcbColumnSearch.setTarget(value);
 
                 CCObjectResult<List<Double>> vector = this.googleTensorService.requestDoc2vector(list);
@@ -137,10 +140,17 @@ public class PcbColumnService {
         }
     }
 
-    public CCResult search(Pageable pageable, QueryParam queryParam) {
+    public CCResult search(Pageable pageable, QueryParam queryParam, PcbColumnSearchVM pcbColumnSearchVM) {
         BoolQueryBuilder query = boolQuery();
         HighlightBuilder highlightBuilder = new HighlightBuilder();
-        QueryBuilder queryBuilder = this.pcbColumnSearchRepository.makeWildcardPermitFieldQuery(queryParam.getQ(), query, highlightBuilder);
+        QueryBuilder queryBuilder;
+        if(StringUtils.isEmpty(queryParam.getQ())) {
+            queryBuilder = boolQuery();
+        } else {
+            queryBuilder = this.pcbColumnSearchRepository.makeWildcardPermitFieldQuery(queryParam.getQ(), query, highlightBuilder);
+        }
+
+        queryBuilder = this.pcbColumnSearchRepository.searchByColumnSearch(pcbColumnSearchVM, query, highlightBuilder);
 
         SearchResponse response = CoolElasticUtils.search(
                 this.restHighLevelClient,
@@ -289,4 +299,30 @@ public class PcbColumnService {
         }
     }
 
+    public CCResult indexing(PcbColumnSearchVM pcbColumnSearchVM) {
+        PcbColumnSearch pcbColumnSearch = this.pcbColumnSearchRepository.findByColNameKeyword(pcbColumnSearchVM.getColName());
+
+        if(pcbColumnSearch != null) {
+            CCResult ccResult = new CCResult();
+            ccResult.setResult(false);
+            ccResult.setMessage("동일한 컬렴이 존재합니다.");
+            return ccResult;
+        }
+
+        pcbColumnSearch = new PcbColumnSearch();
+        BeanUtils.copyProperties(pcbColumnSearchVM, pcbColumnSearch);
+        pcbColumnSearch.setColNameKeyword(pcbColumnSearchVM.getColName());
+
+        CCObjectResult<List<Double>> vector = this.googleTensorService.requestDoc2vector(pcbColumnSearchVM.getColName());
+        pcbColumnSearch.setColNameVector(vector.getData());
+
+        this.pcbColumnSearchRepository.save(pcbColumnSearch);
+
+        return CCObjectResult.setSimpleData(pcbColumnSearch);
+    }
+
+    public CCResult delete(String id) {
+        this.pcbColumnSearchRepository.deleteById(id);
+        return CCResult.ok();
+    }
 }
