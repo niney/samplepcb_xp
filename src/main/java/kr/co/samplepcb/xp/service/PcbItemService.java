@@ -109,7 +109,7 @@ public class PcbItemService {
         List<PcbItemSearch> pcbItemSearchList = new ArrayList<>();
         Map<String, PcbItemSearch> pcbItemSearchMap = new HashMap<>();
 
-        for (int rowIndex = 1; rowIndex < rows; rowIndex++) {
+        for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
             XSSFRow row = sheet.getRow(rowIndex); // 각 행을 읽어온다
             if (row == null) {
                 continue;
@@ -203,7 +203,7 @@ public class PcbItemService {
 
     public List<List<PcbItemSearchVM>> getAllItemGroupByTarget() {
         List<List<PcbItemSearchVM>> pcbItemLists = new ArrayList<>();
-        for (int target = 1; target <= 6; target++) {
+        for (int target = 1; target <= 13; target++) {
             Iterable<PcbItemSearch> itemSearches = this.pcbItemSearchRepository.findAllByTarget(target);
             List<PcbItemSearchVM> pcbItemSearchVMList = new ArrayList<>();
             itemSearches.forEach(pcbItemSearch -> {

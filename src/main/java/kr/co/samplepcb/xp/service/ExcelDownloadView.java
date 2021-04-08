@@ -32,7 +32,7 @@ public class ExcelDownloadView extends AbstractXlsxView {
     private void makeBomItemList(List<List<PcbItemSearchVM>> pcbItemLists, Workbook workbook, HttpServletResponse response) {
         response.setHeader("Content-Disposition", "attachment; filename=\"samplepcb_bom.xlsx\"");
 
-        String[] targetName = {"", "Reference", "Part Number", "Description", "Qty", "Manufacturer", "Package"};
+        String[] targetName = {"", "Reference", "Part Number", "Description", "Qty", "Manufacturer", "Package", "Current", "W", "Value", "Tolerance", "Voltage", "datasheet", "item"};
 
         for (List<PcbItemSearchVM> pcbItemList : pcbItemLists) {
             if(CollectionUtils.isEmpty(pcbItemList)) {
