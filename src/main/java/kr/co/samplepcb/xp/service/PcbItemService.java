@@ -9,8 +9,8 @@ import kr.co.samplepcb.xp.pojo.ElasticIndexName;
 import kr.co.samplepcb.xp.pojo.PcbItemSearchVM;
 import kr.co.samplepcb.xp.pojo.adapter.PagingAdapter;
 import kr.co.samplepcb.xp.repository.PcbItemSearchRepository;
+import kr.co.samplepcb.xp.service.common.sub.ExcelSubService;
 import kr.co.samplepcb.xp.util.CoolElasticUtils;
-import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -46,10 +46,14 @@ public class PcbItemService {
     private final PcbItemSearchRepository pcbItemSearchRepository;
     private final ElasticsearchRestTemplate elasticsearchRestTemplate;
 
-    public PcbItemService(RestHighLevelClient restHighLevelClient, PcbItemSearchRepository pcbItemSearchRepository, ElasticsearchRestTemplate elasticsearchRestTemplate) {
+    // service
+    private final ExcelSubService excelSubService;
+
+    public PcbItemService(RestHighLevelClient restHighLevelClient, PcbItemSearchRepository pcbItemSearchRepository, ElasticsearchRestTemplate elasticsearchRestTemplate, ExcelSubService excelSubService) {
         this.restHighLevelClient = restHighLevelClient;
         this.pcbItemSearchRepository = pcbItemSearchRepository;
         this.elasticsearchRestTemplate = elasticsearchRestTemplate;
+        this.excelSubService = excelSubService;
     }
 
     public void reindexAll() {
@@ -115,8 +119,8 @@ public class PcbItemService {
                 continue;
             }
 
-            String valueStr = getCellStrValue(row, 0).trim();
-            int target = Integer.parseInt(getCellStrValue(row, 1));
+            String valueStr = this.excelSubService.getCellStrValue(row, 0).trim();
+            int target = Integer.parseInt(this.excelSubService.getCellStrValue(row, 1));
 
             PcbItemSearch findPcbItem = pcbItemSearchMap.get(valueStr);
             if(findPcbItem != null) {
@@ -135,29 +139,6 @@ public class PcbItemService {
 
         this.pcbItemSearchRepository.saveAll(pcbItemSearchList);
         log.info("pcb items indexing : target={}", sheetAt + 1);
-    }
-
-    private String getCellStrValue(XSSFRow row, int columnIndex) {
-        String valueStr = "";
-        XSSFCell cell = row.getCell(columnIndex); // 셀에 담겨있는 값을 읽는다.
-        if(cell == null) {
-            return "";
-        }
-        switch (cell.getCellType()) { // 각 셀에 담겨있는 데이터의 타입을 체크하고 해당 타입에 맞게 가져온다.
-            case NUMERIC:
-                valueStr = Integer.toString((int) cell.getNumericCellValue());
-                break;
-            case STRING:
-                valueStr = cell.getStringCellValue() + "";
-                break;
-            case BLANK:
-                valueStr = cell.getBooleanCellValue() + "";
-                break;
-            case ERROR:
-                valueStr = cell.getErrorCellValue() + "";
-                break;
-        }
-        return valueStr;
     }
 
     public CCResult search(Pageable pageable, QueryParam queryParam, PcbItemSearchVM pcbColumnSearchVM) {

@@ -1,3 +1,166 @@
+DELETE pcbkind
+GET pcbkind/_search
+GET pcbkind/_mapping
+PUT pcbkind
+{
+  "settings": {
+    "index": {
+      "number_of_shards": "1",
+      "number_of_replicas": "0",
+      "analysis": {
+        "analyzer": {
+          "nori": {
+            "tokenizer": "nori_tokenizer"
+          },
+          "ngram_analyzer": {
+            "tokenizer": "ngram_tokenizer"
+          },
+          "ngram_analyzer_case_insensitive": {
+            "tokenizer": "ngram_tokenizer",
+            "filter": [
+              "lowercase"
+            ]
+          },
+          "ngram_analyzer_case_insensitive_keyword": {
+            "tokenizer": "ngram_tokenizer",
+            "filter": [
+              "lowercase"
+            ]
+          }
+        },
+        "tokenizer": {
+          "ngram_tokenizer": {
+            "type": "ngram",
+            "min_gram": 2
+          }
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "itemName": {
+        "type": "text",
+        "analyzer": "ngram_analyzer_case_insensitive",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      }
+    }
+  }
+}
+
+POST _analyze
+{
+  "analyzer": "keyword",
+  "text": "hi hello"
+}
+
+
+
+DELETE pcbparts
+GET pcbparts/_search
+GET pcbparts/_mapping
+PUT pcbparts
+{
+  "settings": {
+    "index": {
+      "number_of_shards": "1",
+      "number_of_replicas": "0",
+      "analysis": {
+        "analyzer": {
+          "nori": {
+            "tokenizer": "nori_tokenizer"
+          },
+          "ngram_analyzer": {
+            "tokenizer": "ngram_tokenizer"
+          },
+          "ngram_analyzer_case_insensitive": {
+            "tokenizer": "ngram_tokenizer",
+            "filter": [
+              "lowercase"
+            ]
+          }
+        },
+        "tokenizer": {
+          "ngram_tokenizer": {
+            "type": "ngram",
+            "min_gram": 2
+          }
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "manufacturerName": {
+        "type": "text",
+        "analyzer": "ngram_analyzer_case_insensitive",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "packaging": {
+        "type": "text",
+        "analyzer": "ngram_analyzer_case_insensitive",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "offerName": {
+        "type": "text",
+        "analyzer": "ngram_analyzer_case_insensitive",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "managerPhoneNumber": {
+        "type": "text",
+        "analyzer": "ngram_analyzer_case_insensitive",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "managerName": {
+        "type": "text",
+        "analyzer": "ngram_analyzer_case_insensitive",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "managerEmail": {
+        "type": "text",
+        "analyzer": "ngram_analyzer_case_insensitive",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      }
+    }
+  }
+}
+
+
 PUT pcbcolumn
 {
   "settings": {

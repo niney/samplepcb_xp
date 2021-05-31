@@ -1,6 +1,8 @@
 package kr.co.samplepcb.xp.service;
 
+import coolib.util.CCDateUtils;
 import kr.co.samplepcb.xp.pojo.PcbItemSearchVM;
+import kr.co.samplepcb.xp.pojo.PcbKindSearchVM;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -18,13 +20,26 @@ public class ExcelDownloadView extends AbstractXlsxView {
 
     public static final String VIEW_NAME = "excelDownloadView";
     public static final String ALL_ITEM_GROUP_BY_TARGET = "allItemGroupByTarget";
+    public static final String ALL_KIND_GROUP_BY_TARGET = "allKindGroupByTarget";
+    public static final String ALL_PARTS = "allParts";
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     protected void buildExcelDocument(Map<String, Object> model, Workbook workbook, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        List<List<PcbItemSearchVM>> pcbItemLists = (List<List<PcbItemSearchVM>>) model.get(ALL_ITEM_GROUP_BY_TARGET);
-        if (pcbItemLists != null) {
+        Object itemGroupByTargetObj = model.get(ALL_ITEM_GROUP_BY_TARGET);
+        if(itemGroupByTargetObj != null) {
+            List<List<PcbItemSearchVM>> pcbItemLists = (List<List<PcbItemSearchVM>>) itemGroupByTargetObj;
             this.makeBomItemList(pcbItemLists, workbook, response);
+        }
+        Object kingGroupByTargetObj = model.get(ALL_KIND_GROUP_BY_TARGET);
+        if(kingGroupByTargetObj != null) {
+            List<List<PcbKindSearchVM>> pcbKindLists = (List<List<PcbKindSearchVM>>) kingGroupByTargetObj;
+            this.makeKindList(pcbKindLists, workbook, response);
+        }
+        Object partsListObj = model.get(ALL_PARTS);
+        if(partsListObj != null) {
+            List partsList = (List) partsListObj;
+            this.makePartsList(partsList, workbook, response);
         }
     }
 
@@ -45,6 +60,67 @@ public class ExcelDownloadView extends AbstractXlsxView {
                 row.createCell(0).setCellValue(pcbItem.getItemName());
                 row.createCell(1).setCellValue(pcbItem.getTarget());
             }
+        }
+    }
+
+    private void makeKindList(List<List<PcbKindSearchVM>> pcbKindLists, Workbook workbook, HttpServletResponse response) {
+        response.setHeader("Content-Disposition", "attachment; filename=\"samplepcb_parts_kind.xlsx\"");
+
+        String[] targetName = {"", "1. 대분류", "2. 중분류", "3. 소분류", "4. 제조사", "5. 포장단위", "6. 공급업체"};
+
+        for (List<PcbKindSearchVM> pcbKindList : pcbKindLists) {
+            if(CollectionUtils.isEmpty(pcbKindList)) {
+                continue;
+            }
+            Sheet sheet = workbook.createSheet(targetName[pcbKindList.get(0).getTarget()]);
+            for (int j = 0; j < pcbKindList.size(); j++) {
+                Row row = sheet.createRow(j);
+                PcbKindSearchVM pcbItem = pcbKindList.get(j);
+                row.createCell(0).setCellValue(pcbItem.getId());
+                row.createCell(1).setCellValue(pcbItem.getItemName());
+            }
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void makePartsList(List<Map> partsList, Workbook workbook, HttpServletResponse response) {
+        response.setHeader("Content-Disposition", "attachment; filename=\"samplepcb_parts_list_" + CCDateUtils.getSimpleToday() + ".xlsx\"");
+
+        String[] columnNames = {"식별값","대분류", "중분류", "소분류", "모델명", "제품사양", "제조사", "부품패키지", "포장단위", "최소판매수량", "단가", "현재고", "상품세부정보", "공급업체", "담당자 연락처", "담당자명", "담당자 이메일"};
+
+        Sheet sheet = workbook.createSheet("parts");
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < columnNames.length; i++) {
+            headerRow.createCell(i).setCellValue(columnNames[i]);
+        }
+        for (int i = 0; i < partsList.size(); i++) {
+            Row row = sheet.createRow(i + 1);
+            Map parts = partsList.get(i);
+            createCellByMap(row, 0, parts, "id");
+            createCellByMap(row, 1, parts, "largeCategory");
+            createCellByMap(row, 2, parts, "mediumCategory");
+            createCellByMap(row, 3, parts, "smallCategory");
+            createCellByMap(row, 4, parts, "partName");
+            createCellByMap(row, 5, parts, "description");
+            createCellByMap(row, 6, parts, "manufacturerName");
+            createCellByMap(row, 7, parts, "partsPackaging");
+            createCellByMap(row, 8, parts, "packaging");
+            createCellByMap(row, 9, parts, "moq");
+            createCellByMap(row, 10, parts, "price");
+            createCellByMap(row, 11, parts, "inventoryLevel");
+            createCellByMap(row, 12, parts, "memo");
+            createCellByMap(row, 13, parts, "offerName");
+            createCellByMap(row, 14, parts, "managerPhoneNumber");
+            createCellByMap(row, 15, parts, "managerName");
+            createCellByMap(row, 16, parts, "managerEmail");
+        }
+    }
+
+    private void createCellByMap(Row refRow, int column, Map map, String key) {
+        if(map.get(key) instanceof Number) {
+            refRow.createCell(column).setCellValue((Integer) map.get(key));
+        } else {
+            refRow.createCell(column).setCellValue((String) map.get(key));
         }
     }
 
