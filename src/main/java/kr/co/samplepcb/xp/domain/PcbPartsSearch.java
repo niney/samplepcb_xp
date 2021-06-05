@@ -19,13 +19,33 @@ public class PcbPartsSearch implements Persistable<String> {
     private Date writeDate;
     @LastModifiedDate
     private Date lastModifiedDate;
-    @Field(type = FieldType.Keyword)
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword)
+            }
+    )
     private String largeCategory;
-    @Field(type = FieldType.Keyword)
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword)
+            }
+    )
     private String mediumCategory;
-    @Field(type = FieldType.Keyword)
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword)
+            }
+    )
     private String smallCategory;
-    @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive")
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword)
+            }
+    )
     private String partName;
     @Field(type = FieldType.Text, analyzer = "nori")
     private String description;
@@ -36,7 +56,12 @@ public class PcbPartsSearch implements Persistable<String> {
             }
     )
     private String manufacturerName;
-    @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive")
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword)
+            }
+    )
     private String partsPackaging;
     @MultiField(
             mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
