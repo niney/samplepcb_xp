@@ -125,7 +125,9 @@ public class PcbKindService {
             }
 
             String valueStr = this.excelSubService.getCellStrValue(row, 1).trim();
-
+            if(StringUtils.isEmpty(valueStr)) {
+                continue;
+            }
             PcbKindSearch findPcbItem = pcbKindSearchMap.get(valueStr);
             if(findPcbItem != null) {
                 continue;

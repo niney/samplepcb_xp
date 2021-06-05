@@ -7,6 +7,7 @@ import kr.co.samplepcb.xp.domain.PcbKindSearch;
 import kr.co.samplepcb.xp.pojo.PcbKindSearchVM;
 import kr.co.samplepcb.xp.service.ExcelDownloadView;
 import kr.co.samplepcb.xp.service.PcbKindService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
@@ -48,6 +49,9 @@ public class PcbKindResource {
 
     @PostMapping("/_indexing")
     public CCResult indexing(PcbKindSearchVM pcbItemSearchVM) {
+        if(StringUtils.isEmpty(pcbItemSearchVM.getItemName())) {
+            return CCResult.requireParam();
+        }
         return this.pcbKindService.indexing(pcbItemSearchVM);
     }
 
