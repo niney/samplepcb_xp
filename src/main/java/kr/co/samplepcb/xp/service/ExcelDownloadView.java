@@ -66,7 +66,7 @@ public class ExcelDownloadView extends AbstractXlsxView {
     private void makeKindList(List<List<PcbKindSearchVM>> pcbKindLists, Workbook workbook, HttpServletResponse response) {
         response.setHeader("Content-Disposition", "attachment; filename=\"samplepcb_parts_kind.xlsx\"");
 
-        String[] targetName = {"", "1. 대분류", "2. 중분류", "3. 소분류", "4. 제조사", "5. 포장단위", "6. 공급업체"};
+        String[] targetName = {"", "1. 대분류", "2. 중분류", "3. 소분류", "4. 제조사", "5. 포장단위", "6. 공급업체", "7. 부품패키지"};
 
         for (List<PcbKindSearchVM> pcbKindList : pcbKindLists) {
             if(CollectionUtils.isEmpty(pcbKindList)) {

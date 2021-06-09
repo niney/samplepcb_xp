@@ -11,7 +11,8 @@ public class PcbPartsSearchField {
             PcbPartsSearchField.SMALL_CATEGORY,
             PcbPartsSearchField.MANUFACTURER_NAME,
             PcbPartsSearchField.PACKAGING,
-            PcbPartsSearchField.OFFER_NAME
+            PcbPartsSearchField.OFFER_NAME,
+            PcbPartsSearchField.PARTS_PACKAGING
     };
     public static final Map<String, Integer> PCB_PART_TARGET_IDX_COLUMN = new HashMap<>();
     static {
@@ -28,4 +29,5 @@ public class PcbPartsSearchField {
     public static final String PACKAGING  = "packaging";
     public static final String OFFER_NAME = "offerName";
     public static final String DESCRIPTION  = "description";
+    public static final String PARTS_PACKAGING  = "partsPackaging";
 }

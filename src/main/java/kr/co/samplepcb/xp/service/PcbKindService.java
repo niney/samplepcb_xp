@@ -7,6 +7,7 @@ import coolib.util.CommonUtils;
 import kr.co.samplepcb.xp.domain.PcbKindSearch;
 import kr.co.samplepcb.xp.pojo.ElasticIndexName;
 import kr.co.samplepcb.xp.pojo.PcbKindSearchVM;
+import kr.co.samplepcb.xp.pojo.PcbPartsSearchField;
 import kr.co.samplepcb.xp.pojo.adapter.PagingAdapter;
 import kr.co.samplepcb.xp.repository.PcbKindSearchRepository;
 import kr.co.samplepcb.xp.repository.PcbPartsSearchRepository;
@@ -237,7 +238,7 @@ public class PcbKindService {
 
     public List<List<PcbKindSearchVM>> getAllItemGroupByTarget() {
         List<List<PcbKindSearchVM>> pcbKindLists = new ArrayList<>();
-        for (int target = 1; target <= 6; target++) {
+        for (int target = 1; target <= PcbPartsSearchField.PCB_PART_COLUMN_IDX_TARGET.length - 1; target++) {
             Iterable<PcbKindSearch> kindSearches = this.pcbKindSearchRepository.findAllByTarget(target);
             List<PcbKindSearchVM> pcbKindSearchVMList = new ArrayList<>();
             kindSearches.forEach(pcbItemSearch -> {
