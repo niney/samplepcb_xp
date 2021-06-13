@@ -7,7 +7,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.elasticsearch.annotations.*;
 
-import java.time.Instant;
 import java.util.Date;
 
 @Document(indexName = ElasticIndexName.PCB_PARTS)
@@ -106,6 +105,7 @@ public class PcbPartsSearch implements Persistable<String> {
             }
     )
     private String managerEmail;
+    private Integer status;
 
     public String getId() {
         return id;
@@ -262,5 +262,13 @@ public class PcbPartsSearch implements Persistable<String> {
 
     public void setManagerEmail(String managerEmail) {
         this.managerEmail = managerEmail;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
     }
 }

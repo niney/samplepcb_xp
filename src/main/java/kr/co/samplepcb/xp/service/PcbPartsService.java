@@ -4,6 +4,7 @@ import coolib.common.CCObjectResult;
 import coolib.common.CCResult;
 import coolib.common.QueryParam;
 import coolib.util.CommonUtils;
+import kr.co.samplepcb.xp.config.ApplicationProperties;
 import kr.co.samplepcb.xp.domain.PcbKindSearch;
 import kr.co.samplepcb.xp.domain.PcbPartsSearch;
 import kr.co.samplepcb.xp.pojo.ElasticIndexName;
@@ -22,6 +23,8 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +37,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
 @Service
 public class PcbPartsService {
@@ -47,12 +51,16 @@ public class PcbPartsService {
 
     // service
     private final ExcelSubService excelSubService;
+    
+    // prop
+    private final ApplicationProperties applicationProperties;
 
-    public PcbPartsService(RestHighLevelClient restHighLevelClient, PcbPartsSearchRepository pcbPartsSearchRepository, PcbKindSearchRepository pcbKindSearchRepository, ExcelSubService excelSubService) {
+    public PcbPartsService(RestHighLevelClient restHighLevelClient, PcbPartsSearchRepository pcbPartsSearchRepository, PcbKindSearchRepository pcbKindSearchRepository, ExcelSubService excelSubService, ApplicationProperties applicationProperties) {
         this.restHighLevelClient = restHighLevelClient;
         this.pcbPartsSearchRepository = pcbPartsSearchRepository;
         this.pcbKindSearchRepository = pcbKindSearchRepository;
         this.excelSubService = excelSubService;
+        this.applicationProperties = applicationProperties;
     }
 
     public CCResult indexing(PcbPartsSearchVM pcbPartsSearchVM) {
@@ -64,6 +72,12 @@ public class PcbPartsService {
                 return CCResult.dataNotFound();
             }
             pcbPartsSearch = findPcbPartsOpt.get();
+        }
+        if(StringUtils.isNotEmpty(pcbPartsSearchVM.getToken()) // 토큰값이 있지만 값이 안맞는경우 
+                && !pcbPartsSearchVM.getToken().equals(applicationProperties.getAuth().getToken())
+                // token 값이 없는경우
+                || StringUtils.isEmpty(pcbPartsSearchVM.getToken())) {
+            pcbPartsSearchVM.setStatus(0);
         }
         BeanUtils.copyProperties(pcbPartsSearchVM, pcbPartsSearch);
 
@@ -78,10 +92,26 @@ public class PcbPartsService {
             this.pcbPartsSearchRepository.makeWildcardPermitFieldQuery(queryParam.getQ(), query, highlightBuilder);
         }
         queryBuilder = this.pcbPartsSearchRepository.searchByColumnSearch(pcbPartsSearchVM, queryParam, query, highlightBuilder);
+        
+        // 상태
+        List<Integer> statusList;
+        if(StringUtils.isNotEmpty(pcbPartsSearchVM.getToken()) 
+                && pcbPartsSearchVM.getToken().equals(applicationProperties.getAuth().getToken())) {
+            statusList = pcbPartsSearchVM.getStatusList();
+            if(statusList != null) {
+                BoolQueryBuilder statusQuery = boolQuery();
+                for (Integer status : statusList) {
+                    statusQuery.should(matchQuery(PcbPartsSearchField.STATUS, status));
+                }
+                ((BoolQueryBuilder) queryBuilder).filter(statusQuery);
+            }
+        } else {
+            ((BoolQueryBuilder) queryBuilder).filter(QueryBuilders.matchQuery(PcbPartsSearchField.STATUS, 0));
+        }
 
         SearchResponse response = CoolElasticUtils.search(
-                this.restHighLevelClient,
-                queryBuilder,
+                this.restHighLevelClient, 
+                new FunctionScoreQueryBuilder(queryBuilder, CoolElasticUtils.defaultGaussDecayFnBuilder(PcbPartsSearchField.WRITE_DATE)),
                 highlightBuilder,
                 pageable,
                 null,
@@ -170,7 +200,8 @@ public class PcbPartsService {
             pcbPartsSearch.setManagerPhoneNumber(this.excelSubService.getCellStrValue(row, 14));
             pcbPartsSearch.setManagerName(this.excelSubService.getCellStrValue(row, 15));
             pcbPartsSearch.setManagerEmail(this.excelSubService.getCellStrValue(row, 16));
-
+            pcbPartsSearch.setStatus(PcbPartsSearchField.Status.APPROVED.ordinal());
+            
             log.info("pcb parts item prepare indexing : parts name={}", valueStr);
             pcbPartsSearchList.add(pcbPartsSearch);
             pcbPartsSearchMap.put(valueStr, pcbPartsSearch);

@@ -52,6 +52,9 @@ public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPar
                 Object value = pcbPartsSearchField.get(pcbPartsSearchVM);
                 if(value instanceof String && StringUtils.isNotEmpty((CharSequence) value)) {
                     String name = pcbPartsSearchField.getName();
+                    if(name.equals("token")) {
+                        continue;
+                    }
                     if(name.equals("id")) {
                         name = "_id";
                         refQuery.filter(QueryBuilders.matchQuery(name, value));

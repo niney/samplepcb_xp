@@ -15,9 +15,20 @@ public class PcbPartsSearchField {
             PcbPartsSearchField.PARTS_PACKAGING
     };
     public static final Map<String, Integer> PCB_PART_TARGET_IDX_COLUMN = new HashMap<>();
+
     static {
         for (int i = 1; i < PCB_PART_COLUMN_IDX_TARGET.length; i++) {
             PCB_PART_TARGET_IDX_COLUMN.put(PCB_PART_COLUMN_IDX_TARGET[i], i);
+        }
+    }
+    
+    public enum Status {
+        NOT_APPROVED(0), APPROVED(1);
+        
+        private final int value;
+
+        Status(int value) {
+            this.value = value;
         }
     }
 
@@ -30,4 +41,6 @@ public class PcbPartsSearchField {
     public static final String OFFER_NAME = "offerName";
     public static final String DESCRIPTION  = "description";
     public static final String PARTS_PACKAGING  = "partsPackaging";
+    public static final String STATUS = "status";
+    public static final String WRITE_DATE = "writeDate";
 }

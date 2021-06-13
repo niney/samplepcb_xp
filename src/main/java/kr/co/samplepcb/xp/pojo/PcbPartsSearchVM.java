@@ -1,6 +1,6 @@
 package kr.co.samplepcb.xp.pojo;
 
-import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.data.annotation.Transient;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
@@ -39,6 +39,9 @@ public class PcbPartsSearchVM {
     private String managerPhoneNumber;
     private String managerName;
     private String managerEmail;
+    private Integer status;
+    private List<Integer> statusList;
+    private String token;
 
     public String getId() {
         return id;
@@ -174,5 +177,29 @@ public class PcbPartsSearchVM {
 
     public void setManagerEmail(String managerEmail) {
         this.managerEmail = managerEmail;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public List<Integer> getStatusList() {
+        return statusList;
+    }
+
+    public void setStatusList(List<Integer> statusList) {
+        this.statusList = statusList;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }
