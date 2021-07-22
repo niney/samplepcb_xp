@@ -21,6 +21,7 @@ public class ExcelDownloadView extends AbstractXlsxView {
     public static final String VIEW_NAME = "excelDownloadView";
     public static final String ALL_ITEM_GROUP_BY_TARGET = "allItemGroupByTarget";
     public static final String ALL_KIND_GROUP_BY_TARGET = "allKindGroupByTarget";
+    public static final String ALL_KIND_GROUP_BY_TARGET_FOR_CATEGORY = "allKindGroupByTargetForCategory";
     public static final String ALL_PARTS = "allParts";
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -35,6 +36,11 @@ public class ExcelDownloadView extends AbstractXlsxView {
         if(kingGroupByTargetObj != null) {
             List<List<PcbKindSearchVM>> pcbKindLists = (List<List<PcbKindSearchVM>>) kingGroupByTargetObj;
             this.makeKindList(pcbKindLists, workbook, response);
+        }
+        Object kingGroupByTargetObjForCategory = model.get(ALL_KIND_GROUP_BY_TARGET_FOR_CATEGORY);
+        if (kingGroupByTargetObjForCategory != null) {
+            List<List<PcbKindSearchVM>> pcbKindLists = (List<List<PcbKindSearchVM>>) kingGroupByTargetObjForCategory;
+            this.makeKindListForCategory(pcbKindLists, workbook, response);
         }
         Object partsListObj = model.get(ALL_PARTS);
         if(partsListObj != null) {
@@ -80,6 +86,25 @@ public class ExcelDownloadView extends AbstractXlsxView {
                 row.createCell(1).setCellValue(pcbItem.getItemName());
             }
         }
+    }
+
+    private void makeKindListForCategory(List<List<PcbKindSearchVM>> pcbKindLists, Workbook workbook, HttpServletResponse response) {
+        response.setHeader("Content-Disposition", "attachment; filename=\"samplepcb_parts_kind_for_category.xlsx\"");
+
+        // todo: 구현필요
+//        Sheet sheet = workbook.createSheet("카테고리 분류");
+//        for (int i = 0; i < pcbKindLists.size(); i++) {
+//            List<PcbKindSearchVM> pcbKindList = pcbKindLists.get(i);
+//            if (CollectionUtils.isEmpty(pcbKindList)) {
+//                continue;
+//            }
+//            for (int j = 0; j < pcbKindList.size(); j++) {
+//                Row row = sheet.createRow(j);
+//                PcbKindSearchVM pcbItem = pcbKindList.get(j);
+//                row.createCell(0).setCellValue(pcbItem.getId());
+//                row.createCell(1).setCellValue(pcbItem.getItemName());
+//            }
+//        }
     }
 
     @SuppressWarnings("rawtypes")

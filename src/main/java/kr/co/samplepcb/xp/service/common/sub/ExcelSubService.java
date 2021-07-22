@@ -27,7 +27,7 @@ public class ExcelSubService {
                 valueStr = cell.getStringCellValue() + "";
                 break;
             case BLANK:
-                valueStr = cell.getBooleanCellValue() + "";
+                valueStr = cell.getStringCellValue() + "";
                 break;
             case ERROR:
                 valueStr = cell.getErrorCellValue() + "";

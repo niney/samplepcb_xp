@@ -48,7 +48,12 @@ public interface PcbKindSearchRepository extends ElasticsearchRepository<PcbKind
         if (StringUtils.isNotEmpty(queryParam.getQ())) {
             refQuery.must(QueryBuilders.matchQuery(PcbKindSearchField.ITEM_NAME_TEXT, queryParam.getQ()));
         }
+        if (pcbKindSearchVM.getpId() != null) {
+            refQuery.filter(QueryBuilders.matchQuery(PcbKindSearchField.P_ID, pcbKindSearchVM.getpId()));
+        }
         return refQuery;
     }
+
+    void deleteByTarget(int target);
 
 }

@@ -44,8 +44,8 @@ public class PcbPartsResource {
         return CCResult.ok();
     }
 
-    @PostMapping("/_indexing")
-    public CCResult indexing(PcbPartsSearchVM pcbPartsSearchVM) {
+    @PostMapping(value = "/_indexing", produces = {"application/json", "application/x-www-form-urlencoded"})
+    public CCResult indexing(@RequestBody PcbPartsSearchVM pcbPartsSearchVM) {
         return this.pcbPartsService.indexing(pcbPartsSearchVM);
     }
 

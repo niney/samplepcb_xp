@@ -94,7 +94,8 @@ public class PcbKindService {
         XSSFWorkbook workbook = null;
         try {
             workbook = new XSSFWorkbook(file.getInputStream());
-            for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+            // 1,2,3 대중소 분류는 패스
+            for (int i = 2; i < workbook.getNumberOfSheets(); i++) {
                 excelIndexing(workbook, i);
             }
         } catch (Exception e) {
@@ -179,6 +180,130 @@ public class PcbKindService {
         log.info("pcb kind items indexing : target={}", target);
     }
 
+    public void reindexAllByFileForCategory(MultipartFile file) {
+
+        XSSFWorkbook workbook = null;
+        try {
+            workbook = new XSSFWorkbook(file.getInputStream());
+            excelIndexingForCategory(workbook, 0);
+        } catch (Exception e) {
+            log.error(CommonUtils.getFullStackTrace(e));
+        } finally {
+            try {
+                if (workbook != null) {
+                    workbook.close();
+                }
+            } catch (IOException e) {
+                log.error(e.getMessage());
+            }
+        }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void excelIndexingForCategory(XSSFWorkbook workbook, int sheetAt) {
+        XSSFSheet sheet = workbook.getSheetAt(sheetAt); // 해당 엑셀파일의 시트(Sheet) 수
+        int rows = sheet.getPhysicalNumberOfRows(); // 해당 시트의 행의 개수
+
+        Map<PcbKindSearch, Object> firstMap = new HashMap();
+        PcbKindSearch firstKind = null;
+
+        Map<PcbKindSearch, Object> secondMap = new HashMap<>();
+        PcbKindSearch secondKind = null;
+
+        Map<PcbKindSearch, Object> thirdMap = new HashMap<>();
+
+        // 카테고리 분류(타켓) 삭제
+        this.pcbKindSearchRepository.deleteByTarget(1);
+        this.pcbKindSearchRepository.deleteByTarget(2);
+        this.pcbKindSearchRepository.deleteByTarget(3);
+
+        for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
+            XSSFRow row = sheet.getRow(rowIndex); // 각 행을 읽어온다
+            if (row == null) {
+                continue;
+            }
+
+            String firstItemName = this.excelSubService.getCellStrValue(row, 0).trim();
+            if(StringUtils.isNotEmpty(firstItemName)) {
+                firstKind = new PcbKindSearch();
+                firstKind.setTarget(1);
+                firstKind.setItemName(firstItemName);
+                firstKind.setDisplayName(this.excelSubService.getCellStrValue(row, 1).trim());
+                firstMap.put(firstKind, null);
+            }
+
+            String secondItemName = this.excelSubService.getCellStrValue(row, 2).trim();
+            if (StringUtils.isNotEmpty(secondItemName)) {
+                secondKind = new PcbKindSearch();
+                secondKind.setTarget(2);
+                secondKind.setItemName(secondItemName);
+                secondKind.setDisplayName(this.excelSubService.getCellStrValue(row, 3).trim());
+
+                if(firstMap.get(firstKind) == null) {
+                    secondMap = new HashMap<>();
+                    firstMap.put(firstKind, secondMap);
+                }
+                secondMap.put(secondKind, null);
+            }
+
+            String thirdItemName = this.excelSubService.getCellStrValue(row, 4).trim();
+            if (StringUtils.isNotEmpty(thirdItemName)) {
+                PcbKindSearch thirdKind = new PcbKindSearch();
+                thirdKind.setTarget(3);
+                thirdKind.setItemName(thirdItemName);
+                thirdKind.setDisplayName(this.excelSubService.getCellStrValue(row, 5).trim());
+
+                if(secondMap.get(secondKind) == null) {
+                    thirdMap = new HashMap<>();
+                    secondMap.put(secondKind, thirdMap);
+                }
+                thirdMap.put(thirdKind, null);
+            }
+        }
+
+        this.saveCategoryList(firstMap);
+        log.info("pcb kind category items indexing");
+    }
+
+    @SuppressWarnings("unchecked")
+    private void saveCategoryList(Map<PcbKindSearch, Object> firstMap) {
+        // 저장
+        List<PcbKindSearch> savePcbKindSearchList = new ArrayList<>();
+        firstMap.forEach((pcbKindSearch1, map1) -> {
+            savePcbKindSearchList.add(pcbKindSearch1);
+            if (map1 instanceof HashMap) {
+                Map<PcbKindSearch, Object> secondMap = (Map<PcbKindSearch, Object>) map1;
+                secondMap.forEach((pcbKindSearch2, map2) -> {
+                    savePcbKindSearchList.add(pcbKindSearch2);
+                    if (map2 instanceof HashMap) {
+                        Map<PcbKindSearch, Object> thirdMap = (Map<PcbKindSearch, Object>) map2;
+                        thirdMap.forEach((pcbKindSearch3, map3) -> {
+                            savePcbKindSearchList.add(pcbKindSearch3);
+                        });
+                    }
+                });
+            }
+        });
+        this.pcbKindSearchRepository.saveAll(savePcbKindSearchList);
+
+        // pId 를 업데이트 하여 저장
+        firstMap.forEach((pcbKindSearch1, map1) -> {
+            if (map1 instanceof HashMap) {
+                Map<PcbKindSearch, Object> secondMap = (Map<PcbKindSearch, Object>) map1;
+                secondMap.forEach((pcbKindSearch2, map2) -> {
+                    pcbKindSearch2.setpId(pcbKindSearch1.getId());
+                    if (map2 instanceof HashMap) {
+                        Map<PcbKindSearch, Object> thirdMap = (Map<PcbKindSearch, Object>) map2;
+                        thirdMap.forEach((pcbKindSearch3, map3) -> {
+                            pcbKindSearch3.setpId(pcbKindSearch2.getId());
+                        });
+                    }
+                });
+            }
+        });
+        this.pcbKindSearchRepository.saveAll(savePcbKindSearchList);
+    }
+
     public CCResult search(Pageable pageable, QueryParam queryParam, PcbKindSearchVM pcbKindSearchVM) {
         BoolQueryBuilder query = boolQuery();
         HighlightBuilder highlightBuilder = new HighlightBuilder();
@@ -199,7 +324,7 @@ public class PcbKindService {
     public CCResult indexing(PcbKindSearchVM pcbKindSearchVM) {
         PcbKindSearch pcbKindSearch = this.pcbKindSearchRepository.findByItemNameKeywordAndTarget(pcbKindSearchVM.getItemName(), pcbKindSearchVM.getTarget());
 
-        if(pcbKindSearch != null) {
+        if(pcbKindSearch != null && pcbKindSearch.getDisplayName().equals(pcbKindSearchVM.getDisplayName())) {
             CCResult ccResult = new CCResult();
             ccResult.setResult(false);
             ccResult.setMessage("동일한 아이템명 존재합니다.");
@@ -237,8 +362,12 @@ public class PcbKindService {
     }
 
     public List<List<PcbKindSearchVM>> getAllItemGroupByTarget() {
+        return this.getAllItemGroupByTarget(PcbPartsSearchField.PCB_PART_COLUMN_IDX_TARGET.length - 1);
+    }
+
+    public List<List<PcbKindSearchVM>> getAllItemGroupByTarget(int length) {
         List<List<PcbKindSearchVM>> pcbKindLists = new ArrayList<>();
-        for (int target = 1; target <= PcbPartsSearchField.PCB_PART_COLUMN_IDX_TARGET.length - 1; target++) {
+        for (int target = 1; target <= length; target++) {
             Iterable<PcbKindSearch> kindSearches = this.pcbKindSearchRepository.findAllByTarget(target);
             List<PcbKindSearchVM> pcbKindSearchVMList = new ArrayList<>();
             kindSearches.forEach(pcbItemSearch -> {

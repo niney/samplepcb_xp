@@ -65,9 +65,20 @@ public class PcbKindResource {
         return new ModelAndView(ExcelDownloadView.VIEW_NAME, Collections.singletonMap(ExcelDownloadView.ALL_KIND_GROUP_BY_TARGET, this.pcbKindService.getAllItemGroupByTarget()));
     }
 
+    @GetMapping(value = "/_downloadExcelForCategory", produces = {"application/vnd.ms-excel"})
+    public Object downloadExcelForCategory() {
+        return new ModelAndView(ExcelDownloadView.VIEW_NAME, Collections.singletonMap(ExcelDownloadView.ALL_KIND_GROUP_BY_TARGET_FOR_CATEGORY, this.pcbKindService.getAllItemGroupByTarget(3)));
+    }
+
     @PostMapping(value = "/_uploadItemFile")
     public CCResult uploadItemFile(@RequestParam("file") MultipartFile file/*, HttpServletRequest request*/) {
         this.pcbKindService.reindexAllByFile(file);
+        return CCResult.ok();
+    }
+
+    @PostMapping(value = "/_uploadItemFileForCategory")
+    public CCResult uploadItemFileForCategory(@RequestParam("file") MultipartFile file/*, HttpServletRequest request*/) {
+        this.pcbKindService.reindexAllByFileForCategory(file);
         return CCResult.ok();
     }
 

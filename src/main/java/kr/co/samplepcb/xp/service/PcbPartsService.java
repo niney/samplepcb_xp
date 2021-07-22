@@ -51,7 +51,7 @@ public class PcbPartsService {
 
     // service
     private final ExcelSubService excelSubService;
-    
+
     // prop
     private final ApplicationProperties applicationProperties;
 
@@ -73,7 +73,10 @@ public class PcbPartsService {
             }
             pcbPartsSearch = findPcbPartsOpt.get();
         }
-        if(StringUtils.isNotEmpty(pcbPartsSearchVM.getToken()) // 토큰값이 있지만 값이 안맞는경우 
+        if (pcbPartsSearchVM.getStatus() == null) {
+            pcbPartsSearchVM.setStatus(0);
+        }
+        if(StringUtils.isNotEmpty(pcbPartsSearchVM.getToken()) // 토큰값이 있지만 값이 안맞는경우
                 && !pcbPartsSearchVM.getToken().equals(applicationProperties.getAuth().getToken())
                 // token 값이 없는경우
                 || StringUtils.isEmpty(pcbPartsSearchVM.getToken())) {
@@ -92,10 +95,10 @@ public class PcbPartsService {
             this.pcbPartsSearchRepository.makeWildcardPermitFieldQuery(queryParam.getQ(), query, highlightBuilder);
         }
         queryBuilder = this.pcbPartsSearchRepository.searchByColumnSearch(pcbPartsSearchVM, queryParam, query, highlightBuilder);
-        
+
         // 상태
         List<Integer> statusList;
-        if(StringUtils.isNotEmpty(pcbPartsSearchVM.getToken()) 
+        if(StringUtils.isNotEmpty(pcbPartsSearchVM.getToken())
                 && pcbPartsSearchVM.getToken().equals(applicationProperties.getAuth().getToken())) {
             statusList = pcbPartsSearchVM.getStatusList();
             if(statusList != null) {
@@ -110,7 +113,7 @@ public class PcbPartsService {
         }
 
         SearchResponse response = CoolElasticUtils.search(
-                this.restHighLevelClient, 
+                this.restHighLevelClient,
                 new FunctionScoreQueryBuilder(queryBuilder, CoolElasticUtils.defaultGaussDecayFnBuilder(PcbPartsSearchField.WRITE_DATE)),
                 highlightBuilder,
                 pageable,
@@ -201,7 +204,7 @@ public class PcbPartsService {
             pcbPartsSearch.setManagerName(this.excelSubService.getCellStrValue(row, 15));
             pcbPartsSearch.setManagerEmail(this.excelSubService.getCellStrValue(row, 16));
             pcbPartsSearch.setStatus(PcbPartsSearchField.Status.APPROVED.ordinal());
-            
+
             log.info("pcb parts item prepare indexing : parts name={}", valueStr);
             pcbPartsSearchList.add(pcbPartsSearch);
             pcbPartsSearchMap.put(valueStr, pcbPartsSearch);

@@ -7,7 +7,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.elasticsearch.annotations.*;
 
-import java.time.Instant;
 import java.util.Date;
 
 @Document(indexName = ElasticIndexName.PCB_KIND)
@@ -15,6 +14,8 @@ public class PcbKindSearch implements Persistable<String> {
 
     @Id
     private String id;
+    @Field(type = FieldType.Keyword)
+    private String pId;
     @MultiField(
             mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
             otherFields = {
@@ -28,6 +29,13 @@ public class PcbKindSearch implements Persistable<String> {
     private Date writeDate;
     @LastModifiedDate
     private Date lastModifiedDate;
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword)
+            }
+    )
+    private String displayName;
 
     @Override
     public boolean isNew() {
@@ -41,6 +49,14 @@ public class PcbKindSearch implements Persistable<String> {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getpId() {
+        return pId;
+    }
+
+    public void setpId(String pId) {
+        this.pId = pId;
     }
 
     public String getItemName() {
@@ -75,14 +91,24 @@ public class PcbKindSearch implements Persistable<String> {
         this.lastModifiedDate = lastModifiedDate;
     }
 
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
     @Override
     public String toString() {
         return "PcbKindSearch{" +
                 "id='" + id + '\'' +
+                ", pId='" + pId + '\'' +
                 ", itemName='" + itemName + '\'' +
                 ", target=" + target +
                 ", writeDate=" + writeDate +
                 ", lastModifiedDate=" + lastModifiedDate +
+                ", displayName='" + displayName + '\'' +
                 '}';
     }
 }
