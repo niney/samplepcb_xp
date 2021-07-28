@@ -111,7 +111,7 @@ public class ExcelDownloadView extends AbstractXlsxView {
     private void makePartsList(List<Map> partsList, Workbook workbook, HttpServletResponse response) {
         response.setHeader("Content-Disposition", "attachment; filename=\"samplepcb_parts_list_" + CCDateUtils.getSimpleToday() + ".xlsx\"");
 
-        String[] columnNames = {"식별값","대분류", "중분류", "소분류", "모델명", "제품사양", "제조사", "부품패키지", "포장단위", "최소판매수량", "단가", "현재고", "상품세부정보", "공급업체", "담당자 연락처", "담당자명", "담당자 이메일"};
+        String[] columnNames = {"식별값","대분류", "중분류", "소분류", "모델명", "제품사양", "제조사", "부품패키지", "포장단위", "최소판매수량", "단가(1~10)", "단가(11~50)", "단가(51~100)", "단가(101~500)", "단가(501~1000)", "현재고", "상품세부정보", "공급업체", "담당자 연락처", "담당자명", "담당자 이메일"};
 
         Sheet sheet = workbook.createSheet("parts");
         Row headerRow = sheet.createRow(0);
@@ -131,16 +131,21 @@ public class ExcelDownloadView extends AbstractXlsxView {
             createCellByMap(row, 7, parts, "partsPackaging");
             createCellByMap(row, 8, parts, "packaging");
             createCellByMap(row, 9, parts, "moq");
-            createCellByMap(row, 10, parts, "price");
-            createCellByMap(row, 11, parts, "inventoryLevel");
-            createCellByMap(row, 12, parts, "memo");
-            createCellByMap(row, 13, parts, "offerName");
-            createCellByMap(row, 14, parts, "managerPhoneNumber");
-            createCellByMap(row, 15, parts, "managerName");
-            createCellByMap(row, 16, parts, "managerEmail");
+            createCellByMap(row, 10, parts, "price1to10");
+            createCellByMap(row, 11, parts, "price11to50");
+            createCellByMap(row, 12, parts, "price51to100");
+            createCellByMap(row, 13, parts, "price101to500");
+            createCellByMap(row, 14, parts, "price501to1000");
+            createCellByMap(row, 15, parts, "inventoryLevel");
+            createCellByMap(row, 16, parts, "memo");
+            createCellByMap(row, 17, parts, "offerName");
+            createCellByMap(row, 18, parts, "managerPhoneNumber");
+            createCellByMap(row, 19, parts, "managerName");
+            createCellByMap(row, 20, parts, "managerEmail");
         }
     }
 
+    @SuppressWarnings("rawtypes")
     private void createCellByMap(Row refRow, int column, Map map, String key) {
         if(map.get(key) instanceof Number) {
             refRow.createCell(column).setCellValue((Integer) map.get(key));

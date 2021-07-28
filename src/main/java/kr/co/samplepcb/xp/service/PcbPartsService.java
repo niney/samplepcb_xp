@@ -109,7 +109,7 @@ public class PcbPartsService {
                 ((BoolQueryBuilder) queryBuilder).filter(statusQuery);
             }
         } else {
-            ((BoolQueryBuilder) queryBuilder).filter(QueryBuilders.matchQuery(PcbPartsSearchField.STATUS, 0));
+            ((BoolQueryBuilder) queryBuilder).filter(QueryBuilders.matchQuery(PcbPartsSearchField.STATUS, 1));
         }
 
         SearchResponse response = CoolElasticUtils.search(
@@ -179,12 +179,12 @@ public class PcbPartsService {
             if(findPcbItem != null) {
                 continue;
             }
-            String largeCategory = checkPcbKindExist(targetPcbKindSearchMap, row, 1, PcbPartsSearchField.LARGE_CATEGORY);
-            String mediumCategory = checkPcbKindExist(targetPcbKindSearchMap, row, 2, PcbPartsSearchField.MEDIUM_CATEGORY);
-            String smallCategory = checkPcbKindExist(targetPcbKindSearchMap, row, 3, PcbPartsSearchField.SMALL_CATEGORY);
-            String manufacturerName = checkPcbKindExist(targetPcbKindSearchMap, row, 6, PcbPartsSearchField.MANUFACTURER_NAME);
-            String packaging = checkPcbKindExist(targetPcbKindSearchMap, row, 8, PcbPartsSearchField.PACKAGING);
-            String offerName = checkPcbKindExist(targetPcbKindSearchMap, row, 13, PcbPartsSearchField.OFFER_NAME);
+            String largeCategory = checkPcbKindExistForCategory(row, 1, PcbPartsSearchField.LARGE_CATEGORY);
+            String mediumCategory = checkPcbKindExistForCategory(row, 2, PcbPartsSearchField.MEDIUM_CATEGORY);
+            String smallCategory = checkPcbKindExistForCategory(row, 3, PcbPartsSearchField.SMALL_CATEGORY);
+            String manufacturerName = checkPcbKindExistForCategory(targetPcbKindSearchMap, row, 6, PcbPartsSearchField.MANUFACTURER_NAME);
+            String packaging = checkPcbKindExistForCategory(targetPcbKindSearchMap, row, 8, PcbPartsSearchField.PACKAGING);
+            String offerName = checkPcbKindExistForCategory(targetPcbKindSearchMap, row, 17, PcbPartsSearchField.OFFER_NAME);
 
             PcbPartsSearch pcbPartsSearch = new PcbPartsSearch();
             pcbPartsSearch.setLargeCategory(largeCategory);
@@ -196,13 +196,17 @@ public class PcbPartsService {
             pcbPartsSearch.setPartsPackaging(this.excelSubService.getCellStrValue(row, 7));
             pcbPartsSearch.setPackaging(packaging);
             pcbPartsSearch.setMoq(this.excelSubService.getCellNumberValue(row, 9).intValue());
-            pcbPartsSearch.setPrice(this.excelSubService.getCellNumberValue(row, 10).intValue());
-            pcbPartsSearch.setInventoryLevel(this.excelSubService.getCellNumberValue(row, 11).intValue());
-            pcbPartsSearch.setMemo(this.excelSubService.getCellStrValue(row, 12));
+            pcbPartsSearch.setPrice1to10(this.excelSubService.getCellNumberValue(row, 10).intValue());
+            pcbPartsSearch.setPrice11to50(this.excelSubService.getCellNumberValue(row, 11).intValue());
+            pcbPartsSearch.setPrice51to100(this.excelSubService.getCellNumberValue(row, 12).intValue());
+            pcbPartsSearch.setPrice101to500(this.excelSubService.getCellNumberValue(row, 13).intValue());
+            pcbPartsSearch.setPrice501to1000(this.excelSubService.getCellNumberValue(row, 14).intValue());
+            pcbPartsSearch.setInventoryLevel(this.excelSubService.getCellNumberValue(row, 15).intValue());
+            pcbPartsSearch.setMemo(this.excelSubService.getCellStrValue(row, 16));
             pcbPartsSearch.setOfferName(offerName);
-            pcbPartsSearch.setManagerPhoneNumber(this.excelSubService.getCellStrValue(row, 14));
-            pcbPartsSearch.setManagerName(this.excelSubService.getCellStrValue(row, 15));
-            pcbPartsSearch.setManagerEmail(this.excelSubService.getCellStrValue(row, 16));
+            pcbPartsSearch.setManagerPhoneNumber(this.excelSubService.getCellStrValue(row, 18));
+            pcbPartsSearch.setManagerName(this.excelSubService.getCellStrValue(row, 19));
+            pcbPartsSearch.setManagerEmail(this.excelSubService.getCellStrValue(row, 20));
             pcbPartsSearch.setStatus(PcbPartsSearchField.Status.APPROVED.ordinal());
 
             log.info("pcb parts item prepare indexing : parts name={}", valueStr);
@@ -227,6 +231,55 @@ public class PcbPartsService {
     }
 
     /**
+     * pcb kind 에 존재 하지는 검사 하여 없으면 넣지 않는다
+     * @param row 로우
+     * @param rowIdx 인덱스
+     * @param targetName 대상명
+     * @return 아이템명
+     */
+    private String checkPcbKindExistForCategory(XSSFRow row, int rowIdx, String targetName) {
+        Integer target = PcbPartsSearchField.PCB_PART_TARGET_IDX_COLUMN.get(targetName);
+        String value = this.excelSubService.getCellStrValue(row, rowIdx);
+        if(StringUtils.isBlank(value)) {
+            return "";
+        }
+        PcbKindSearch pcbKindSearch = pcbKindSearchRepository.findByItemNameKeywordAndTarget(value, target); // 아이템명으로 검색
+        if(pcbKindSearch == null) {
+            pcbKindSearch = pcbKindSearchRepository.findByDisplayNameKeywordAndTarget(value, target); // 디시플레이명으로 검색
+            if(pcbKindSearch == null) {
+                value = "";
+            } else {
+                value = pcbKindSearch.getItemName();
+            }
+        }
+        if(!value.equals("")) {
+            // 부모값 체크
+            String pTargetName = "";
+            if(targetName.equals(PcbPartsSearchField.MEDIUM_CATEGORY)) {
+                pTargetName = PcbPartsSearchField.LARGE_CATEGORY;
+            }
+            if (targetName.equals(PcbPartsSearchField.SMALL_CATEGORY)) {
+                pTargetName = PcbPartsSearchField.MEDIUM_CATEGORY;
+            }
+            if(!pTargetName.equals("")) { // 현재 검색된 kind 의 부모값과 엑셀의 부모값 일치 하는지 검사
+                String parentValue = this.excelSubService.getCellStrValue(row, rowIdx - 1);
+                if(StringUtils.isBlank(parentValue)) {
+                    return "";
+                }
+                Optional<PcbKindSearch> parentPcbKindOpt = pcbKindSearchRepository.findById(pcbKindSearch.getpId());
+                if(!parentPcbKindOpt.isPresent()) {
+                    return "";
+                }
+                PcbKindSearch parentPcbKindSearch = parentPcbKindOpt.get();
+                if(!parentValue.trim().equals(parentPcbKindSearch.getItemName()) && !parentValue.trim().equals(parentPcbKindSearch.getDisplayName())) {
+                    return "";
+                }
+            }
+        }
+        return value;
+    }
+
+    /**
      * pcb kind 에 이미 존재 하는지 검사혀여 없으면 new kind list 넣어준다
      * @param targetPcbKindSearchMap 새로운 kind map(ref)
      * @param row 로우
@@ -234,7 +287,7 @@ public class PcbPartsService {
      * @param targetName 대상명
      * @return 로우 인덱스에서 가져온 데이터
      */
-    private String checkPcbKindExist(Map<Integer, Map<String, PcbKindSearch>> targetPcbKindSearchMap, XSSFRow row, int rowIdx, String targetName) {
+    private String checkPcbKindExistForCategory(Map<Integer, Map<String, PcbKindSearch>> targetPcbKindSearchMap, XSSFRow row, int rowIdx, String targetName) {
         String value = this.excelSubService.getCellStrValue(row, rowIdx);
         makePcbKindIfNotExist(targetPcbKindSearchMap, targetName, value);
         return value;

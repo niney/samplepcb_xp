@@ -1,11 +1,14 @@
 package kr.co.samplepcb.xp.pojo;
 
+import java.util.List;
+
 public class PcbKindSearchVM {
 
     private String id;
     private String pId;
     private String itemName;
     private Integer target;
+    private List<Integer> targetList;
     private String displayName;
 
     public String getId() {
@@ -38,6 +41,14 @@ public class PcbKindSearchVM {
 
     public void setTarget(Integer target) {
         this.target = target;
+    }
+
+    public List<Integer> getTargetList() {
+        return targetList;
+    }
+
+    public void setTargetList(List<Integer> targetList) {
+        this.targetList = targetList;
     }
 
     public String getDisplayName() {
