@@ -1,3 +1,5 @@
+완전일치 : https://stackoverflow.com/questions/37894448/exact-match-in-elastic-search-query
+
 DELETE pcbkind
 GET pcbkind/_search
 GET pcbkind/_mapping
@@ -7,6 +9,7 @@ PUT pcbkind
     "index": {
       "number_of_shards": "1",
       "number_of_replicas": "0",
+      "max_result_window": "1000000000",
       "analysis": {
         "analyzer": {
           "nori": {
@@ -28,6 +31,14 @@ PUT pcbkind
             ]
           }
         },
+        "normalizer": {
+          "keyword_normalizer": {
+            "type": "custom",
+            "filter": [
+              "lowercase"
+            ]
+          }
+        },
         "tokenizer": {
           "ngram_tokenizer": {
             "type": "ngram",
@@ -39,6 +50,9 @@ PUT pcbkind
   },
   "mappings": {
     "properties": {
+      "pId": {
+        "type": "keyword"
+      },
       "itemName": {
         "type": "text",
         "analyzer": "ngram_analyzer_case_insensitive",
@@ -46,6 +60,10 @@ PUT pcbkind
           "keyword": {
             "type": "keyword",
             "ignore_above": 256
+          },
+          "normalize": {
+            "type": "keyword",
+            "normalizer": "keyword_normalizer"
           }
         }
       }
@@ -83,12 +101,31 @@ PUT pcbparts
             "filter": [
               "lowercase"
             ]
+          },
+          "ngram_analyzer4_case_insensitive": {
+            "tokenizer": "ngram_tokenizer4",
+            "filter": [
+              "lowercase"
+            ]
           }
         },
         "tokenizer": {
           "ngram_tokenizer": {
             "type": "ngram",
             "min_gram": 2
+          },
+          "ngram_tokenizer4": {
+            "type": "ngram",
+            "min_gram": 4,
+            "max_gram": 4
+          }
+        },
+        "normalizer": {
+          "keyword_normalizer": {
+            "type": "custom",
+            "filter": [
+              "lowercase"
+            ]
           }
         }
       }
@@ -96,6 +133,20 @@ PUT pcbparts
   },
   "mappings": {
     "properties": {
+      "partName": {
+        "type": "text",
+        "analyzer": "ngram_analyzer4_case_insensitive",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          },
+          "normalize": {
+            "type": "keyword",
+            "normalizer": "keyword_normalizer"
+          }
+        }
+      },
       "manufacturerName": {
         "type": "text",
         "analyzer": "ngram_analyzer_case_insensitive",
@@ -103,56 +154,10 @@ PUT pcbparts
           "keyword": {
             "type": "keyword",
             "ignore_above": 256
-          }
-        }
-      },
-      "packaging": {
-        "type": "text",
-        "analyzer": "ngram_analyzer_case_insensitive",
-        "fields": {
-          "keyword": {
+          },
+          "normalize": {
             "type": "keyword",
-            "ignore_above": 256
-          }
-        }
-      },
-      "offerName": {
-        "type": "text",
-        "analyzer": "ngram_analyzer_case_insensitive",
-        "fields": {
-          "keyword": {
-            "type": "keyword",
-            "ignore_above": 256
-          }
-        }
-      },
-      "managerPhoneNumber": {
-        "type": "text",
-        "analyzer": "ngram_analyzer_case_insensitive",
-        "fields": {
-          "keyword": {
-            "type": "keyword",
-            "ignore_above": 256
-          }
-        }
-      },
-      "managerName": {
-        "type": "text",
-        "analyzer": "ngram_analyzer_case_insensitive",
-        "fields": {
-          "keyword": {
-            "type": "keyword",
-            "ignore_above": 256
-          }
-        }
-      },
-      "managerEmail": {
-        "type": "text",
-        "analyzer": "ngram_analyzer_case_insensitive",
-        "fields": {
-          "keyword": {
-            "type": "keyword",
-            "ignore_above": 256
+            "normalizer": "keyword_normalizer"
           }
         }
       }

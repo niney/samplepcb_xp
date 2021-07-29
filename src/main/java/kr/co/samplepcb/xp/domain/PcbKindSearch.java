@@ -19,7 +19,8 @@ public class PcbKindSearch implements Persistable<String> {
     @MultiField(
             mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
             otherFields = {
-                    @InnerField(suffix = "keyword", type = FieldType.Keyword)
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword),
+                    @InnerField(suffix = "normalize", type = FieldType.Keyword, normalizer = "keyword_normalizer")
             }
     )
     private String itemName;
@@ -32,10 +33,36 @@ public class PcbKindSearch implements Persistable<String> {
     @MultiField(
             mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
             otherFields = {
-                    @InnerField(suffix = "keyword", type = FieldType.Keyword)
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword),
+                    @InnerField(suffix = "normalize", type = FieldType.Keyword, normalizer = "keyword_normalizer")
             }
     )
     private String displayName;
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword),
+                    @InnerField(suffix = "normalize", type = FieldType.Keyword, normalizer = "keyword_normalizer")
+            }
+    )
+    private String etc1;
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword),
+                    @InnerField(suffix = "normalize", type = FieldType.Keyword, normalizer = "keyword_normalizer")
+            }
+    )
+    private String etc2;
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword),
+                    @InnerField(suffix = "normalize", type = FieldType.Keyword, normalizer = "keyword_normalizer")
+            }
+    )
+    private String etc3;
+
 
     @Override
     public boolean isNew() {
@@ -99,6 +126,30 @@ public class PcbKindSearch implements Persistable<String> {
         this.displayName = displayName;
     }
 
+    public String getEtc1() {
+        return etc1;
+    }
+
+    public void setEtc1(String etc1) {
+        this.etc1 = etc1;
+    }
+
+    public String getEtc2() {
+        return etc2;
+    }
+
+    public void setEtc2(String etc2) {
+        this.etc2 = etc2;
+    }
+
+    public String getEtc3() {
+        return etc3;
+    }
+
+    public void setEtc3(String etc3) {
+        this.etc3 = etc3;
+    }
+
     @Override
     public String toString() {
         return "PcbKindSearch{" +
@@ -109,6 +160,9 @@ public class PcbKindSearch implements Persistable<String> {
                 ", writeDate=" + writeDate +
                 ", lastModifiedDate=" + lastModifiedDate +
                 ", displayName='" + displayName + '\'' +
+                ", etc1='" + etc1 + '\'' +
+                ", etc2='" + etc2 + '\'' +
+                ", etc3='" + etc3 + '\'' +
                 '}';
     }
 }

@@ -10,6 +10,9 @@ public class PcbKindSearchVM {
     private Integer target;
     private List<Integer> targetList;
     private String displayName;
+    private String etc1;
+    private String etc2;
+    private String etc3;
 
     public String getId() {
         return id;
@@ -57,5 +60,29 @@ public class PcbKindSearchVM {
 
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
+    }
+
+    public String getEtc1() {
+        return etc1;
+    }
+
+    public void setEtc1(String etc1) {
+        this.etc1 = etc1;
+    }
+
+    public String getEtc2() {
+        return etc2;
+    }
+
+    public void setEtc2(String etc2) {
+        this.etc2 = etc2;
+    }
+
+    public String getEtc3() {
+        return etc3;
+    }
+
+    public void setEtc3(String etc3) {
+        this.etc3 = etc3;
     }
 }

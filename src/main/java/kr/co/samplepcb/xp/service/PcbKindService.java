@@ -4,11 +4,13 @@ import coolib.common.CCObjectResult;
 import coolib.common.CCResult;
 import coolib.common.QueryParam;
 import coolib.util.CommonUtils;
+import kr.co.samplepcb.xp.config.ApplicationProperties;
 import kr.co.samplepcb.xp.domain.PcbKindSearch;
 import kr.co.samplepcb.xp.pojo.ElasticIndexName;
 import kr.co.samplepcb.xp.pojo.PcbKindSearchVM;
 import kr.co.samplepcb.xp.pojo.PcbPartsSearchField;
 import kr.co.samplepcb.xp.pojo.adapter.PagingAdapter;
+import kr.co.samplepcb.xp.pojo.octopart.OctoPartManufacturers;
 import kr.co.samplepcb.xp.repository.PcbKindSearchRepository;
 import kr.co.samplepcb.xp.repository.PcbPartsSearchRepository;
 import kr.co.samplepcb.xp.service.common.sub.ExcelSubService;
@@ -26,10 +28,15 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -42,6 +49,8 @@ public class PcbKindService {
 
     private static final Logger log = LoggerFactory.getLogger(PcbKindService.class);
 
+    private final String mlServerUrl;
+
     // search
     private final RestHighLevelClient restHighLevelClient;
     private final PcbKindSearchRepository pcbKindSearchRepository;
@@ -52,7 +61,9 @@ public class PcbKindService {
     private final ExcelSubService excelSubService;
     private final PcbPartsSubService pcbPartsSubService;
 
-    public PcbKindService(RestHighLevelClient restHighLevelClient, PcbKindSearchRepository pcbKindSearchRepository, PcbPartsSearchRepository pcbPartsSearchRepository, ElasticsearchRestTemplate elasticsearchRestTemplate, ExcelSubService excelSubService, PcbPartsSubService pcbPartsSubService) {
+    public PcbKindService(ApplicationProperties appProp, RestHighLevelClient restHighLevelClient, PcbKindSearchRepository pcbKindSearchRepository, PcbPartsSearchRepository pcbPartsSearchRepository, ElasticsearchRestTemplate elasticsearchRestTemplate, ExcelSubService excelSubService, PcbPartsSubService pcbPartsSubService) {
+        // prop
+        this.mlServerUrl = appProp.getMlServer().getServerUrl();
         this.restHighLevelClient = restHighLevelClient;
         this.pcbKindSearchRepository = pcbKindSearchRepository;
         this.pcbPartsSearchRepository = pcbPartsSearchRepository;
@@ -321,35 +332,75 @@ public class PcbKindService {
         return PagingAdapter.toCCPagingResult(pageable, CoolElasticUtils.getSourceWithHighlightDetailInline(response), response.getHits().getTotalHits().value);
     }
 
-    public CCResult indexing(PcbKindSearchVM pcbKindSearchVM) {
-        PcbKindSearch pcbKindSearch = this.pcbKindSearchRepository.findByItemNameKeywordAndTarget(pcbKindSearchVM.getItemName(), pcbKindSearchVM.getTarget());
+    private CCResult prepareIndexing(PcbKindSearchVM pcbKindSearchVM) {
+        CCResult ccResult = new CCResult();
 
-        if(pcbKindSearch != null && pcbKindSearch.getDisplayName().equals(pcbKindSearchVM.getDisplayName())) {
-            CCResult ccResult = new CCResult();
+        PcbKindSearch pcbKindSearch = this.pcbKindSearchRepository.findByItemNameKeywordAndTarget(pcbKindSearchVM.getItemName(), pcbKindSearchVM.getTarget());
+        if (pcbKindSearch != null && (pcbKindSearch.getDisplayName() == null || pcbKindSearch.getDisplayName().equals(pcbKindSearchVM.getDisplayName()))) {
             ccResult.setResult(false);
             ccResult.setMessage("동일한 아이템명 존재합니다.");
             return ccResult;
         }
 
         pcbKindSearch = new PcbKindSearch();
-        if(pcbKindSearchVM.getId() != null) {
+        if (pcbKindSearchVM.getId() != null) {
             Optional<PcbKindSearch> findPcbKindOpt = this.pcbKindSearchRepository.findById(pcbKindSearchVM.getId());
-            if(!findPcbKindOpt.isPresent()) {
+            if (!findPcbKindOpt.isPresent()) {
                 return CCResult.dataNotFound();
             }
             pcbKindSearch = findPcbKindOpt.get();
             CCResult result = this.pcbPartsSubService.updateKindAllByGroup(pcbKindSearchVM.getTarget(),
                     pcbKindSearch.getItemName(), // 기존명
                     pcbKindSearchVM.getItemName()); // 수정명
-            if(!result.isResult()) {
+            if (!result.isResult()) {
                 return result;
             }
         }
+        return CCObjectResult.setSimpleData(pcbKindSearch);
+    }
+
+    @SuppressWarnings("unchecked")
+    public CCResult indexing(PcbKindSearchVM pcbKindSearchVM) {
+        CCResult ccResult = this.prepareIndexing(pcbKindSearchVM);
+        if (!ccResult.getResult()) {
+            log.warn("pcb kind indexing warn name: {}, target: {}", pcbKindSearchVM.getItemName(), pcbKindSearchVM.getTarget());
+            return ccResult;
+        }
+        if (!(ccResult instanceof CCObjectResult)) {
+            return ccResult;
+        }
+        PcbKindSearch pcbKindSearch = ((CCObjectResult<PcbKindSearch>) ccResult).getData();
         BeanUtils.copyProperties(pcbKindSearchVM, pcbKindSearch);
 
         this.pcbKindSearchRepository.save(pcbKindSearch);
+        log.info("pcb kind indexing name: {}, target: {}", pcbKindSearch.getItemName(), pcbKindSearch.getTarget());
 
         return CCObjectResult.setSimpleData(pcbKindSearch);
+    }
+
+    @SuppressWarnings("unchecked")
+    public CCResult indexing(List<PcbKindSearchVM> pcbKindSearchVMList) {
+
+        List<PcbKindSearch> pcbKindSearchList = new ArrayList<>();
+        for (PcbKindSearchVM pcbKindSearchVM : pcbKindSearchVMList) {
+            CCResult ccResult = this.prepareIndexing(pcbKindSearchVM);
+            if(!ccResult.getResult()) {
+                log.warn("pcb kind indexing warn name: {}, target: {}, message: {}", pcbKindSearchVM.getItemName(), pcbKindSearchVM.getTarget(), ccResult.getMessage());
+                continue;
+            }
+            if(!(ccResult instanceof CCObjectResult)) {
+                continue;
+            }
+            PcbKindSearch pcbKindSearch = ((CCObjectResult<PcbKindSearch>) ccResult).getData();
+            BeanUtils.copyProperties(pcbKindSearchVM, pcbKindSearch);
+            log.info("pcb kind prepare indexing name: {}, target: {}", pcbKindSearch.getItemName(), pcbKindSearch.getTarget());
+            pcbKindSearchList.add(pcbKindSearch);
+        }
+
+        this.pcbKindSearchRepository.saveAll(pcbKindSearchList);
+        log.info("pcb kind prepare indexing complete");
+
+        return CCResult.ok();
     }
 
     public CCResult delete(String id) {
@@ -378,5 +429,41 @@ public class PcbKindService {
             pcbKindLists.add(pcbKindSearchVMList);
         }
         return pcbKindLists;
+    }
+
+    public List<OctoPartManufacturers> getRequestManufacturers() {
+
+        ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024 * 10 * 1000)).build();
+        WebClient webClient = WebClient.builder().exchangeStrategies(exchangeStrategies).build();
+
+        Mono<Map<String, List<OctoPartManufacturers>>> requestSpec = webClient
+                .method(HttpMethod.GET)
+                .uri(mlServerUrl + "/api/searchManufacturers")
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<String, List<OctoPartManufacturers>>>() {
+                });
+
+        Map<String, List<OctoPartManufacturers>> listMap = requestSpec.block();
+        return listMap.get("manufacturers");
+    }
+
+    public CCResult indexingManufacturers() {
+        Integer target = PcbPartsSearchField.PCB_PART_TARGET_IDX_COLUMN.get(PcbPartsSearchField.MANUFACTURER_NAME);
+        List<OctoPartManufacturers> manufacturers = this.getRequestManufacturers();
+        List<PcbKindSearchVM> pcbKindSearchVMList = new ArrayList<>();
+
+        for (OctoPartManufacturers manufacturer : manufacturers) {
+            PcbKindSearchVM pcbKindSearchVM = new PcbKindSearchVM();
+            pcbKindSearchVM.setItemName(manufacturer.getName());
+            pcbKindSearchVM.setEtc1(manufacturer.getId());
+            pcbKindSearchVM.setEtc2(manufacturer.getSlug());
+            pcbKindSearchVM.setEtc3(manufacturer.getHomepageUrl());
+            pcbKindSearchVM.setTarget(target);
+
+            pcbKindSearchVMList.add(pcbKindSearchVM);
+        }
+
+        return this.indexing(pcbKindSearchVMList);
     }
 }

@@ -87,4 +87,9 @@ public class PcbKindResource {
         return CCObjectResult.setSimpleData(this.pcbKindService.getAllItemGroupByTarget());
     }
 
+    @GetMapping("/_indexingManufacturers")
+    public CCResult indexingManufacturers() {
+        return this.pcbKindService.indexingManufacturers();
+    }
+
 }

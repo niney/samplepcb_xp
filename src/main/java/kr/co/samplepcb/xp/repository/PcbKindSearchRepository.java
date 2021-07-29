@@ -26,7 +26,7 @@ public interface PcbKindSearchRepository extends ElasticsearchRepository<PcbKind
             "      \"must\": [\n" +
             "        {\n" +
             "          \"match\": {\n" +
-            "            \"itemName.keyword\": \"?0\"\n" +
+            "            \"itemName.normalize\": \"?0\"\n" +
             "          }\n" +
             "        },\n" +
             "        {\n" +
@@ -44,7 +44,7 @@ public interface PcbKindSearchRepository extends ElasticsearchRepository<PcbKind
             "      \"must\": [\n" +
             "        {\n" +
             "          \"match\": {\n" +
-            "            \"displayName.keyword\": \"?0\"\n" +
+            "            \"displayName.normalize\": \"?0\"\n" +
             "          }\n" +
             "        },\n" +
             "        {\n" +
@@ -75,7 +75,7 @@ public interface PcbKindSearchRepository extends ElasticsearchRepository<PcbKind
             refQuery.filter(QueryBuilders.matchQuery(PcbKindSearchField.ITEM_NAME, pcbKindSearchVM.getItemName()));
         }
         if (StringUtils.isNotEmpty(queryParam.getQ())) {
-            refQuery.must(QueryBuilders.matchQuery(PcbKindSearchField.ITEM_NAME_TEXT, queryParam.getQ()));
+            refQuery.must(QueryBuilders.matchQuery(PcbKindSearchField.ITEM_NAME, queryParam.getQ()));
         }
         if (pcbKindSearchVM.getpId() != null) {
             refQuery.filter(QueryBuilders.matchQuery(PcbKindSearchField.P_ID, pcbKindSearchVM.getpId()));

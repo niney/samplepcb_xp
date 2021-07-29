@@ -4,6 +4,7 @@ spring:
           pageable:
               one-indexed-parameters: true # Whether to expose and assume 1-based page number indexes.
               default-page-size: 10
+              max-page-size: 1000000000 # 1 billion
     elasticsearch:
         rest:
             uris: http://localhost:9200
@@ -11,6 +12,8 @@ spring:
 application:
     glFlow:
         serverUrl: http://localhost:8096
+    mlServer:
+        serverUrl: http://localhost:8099
     cors:
         allowed-origins: "*"
         allowed-methods: GET, PUT, POST, DELETE, OPTIONS
