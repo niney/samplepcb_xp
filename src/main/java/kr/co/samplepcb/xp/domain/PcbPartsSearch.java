@@ -21,7 +21,7 @@ public class PcbPartsSearch implements Persistable<String> {
     @LastModifiedDate
     private Date lastModifiedDate;
     @MultiField(
-            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            mainField = @Field(type = FieldType.Text, analyzer = "nori", fielddata = true),
             otherFields = {
                     @InnerField(suffix = "keyword", type = FieldType.Keyword),
                     @InnerField(suffix = "normalize", type = FieldType.Keyword, normalizer = "keyword_normalizer")
@@ -29,7 +29,7 @@ public class PcbPartsSearch implements Persistable<String> {
     )
     private String largeCategory;
     @MultiField(
-            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            mainField = @Field(type = FieldType.Text, analyzer = "nori", fielddata = true),
             otherFields = {
                     @InnerField(suffix = "keyword", type = FieldType.Keyword),
                     @InnerField(suffix = "normalize", type = FieldType.Keyword, normalizer = "keyword_normalizer")
@@ -37,7 +37,7 @@ public class PcbPartsSearch implements Persistable<String> {
     )
     private String mediumCategory;
     @MultiField(
-            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            mainField = @Field(type = FieldType.Text, analyzer = "nori", fielddata = true),
             otherFields = {
                     @InnerField(suffix = "keyword", type = FieldType.Keyword),
                     @InnerField(suffix = "normalize", type = FieldType.Keyword, normalizer = "keyword_normalizer")
@@ -55,7 +55,7 @@ public class PcbPartsSearch implements Persistable<String> {
     @Field(type = FieldType.Text, analyzer = "nori")
     private String description;
     @MultiField(
-            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer4_case_insensitive", fielddata = true),
             otherFields = {
                     @InnerField(suffix = "keyword", type = FieldType.Keyword),
                     @InnerField(suffix = "normalize", type = FieldType.Keyword, normalizer = "keyword_normalizer")
@@ -63,7 +63,7 @@ public class PcbPartsSearch implements Persistable<String> {
     )
     private String manufacturerName;
     @MultiField(
-            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer4_case_insensitive", fielddata = true),
             otherFields = {
                     @InnerField(suffix = "keyword", type = FieldType.Keyword),
                     @InnerField(suffix = "normalize", type = FieldType.Keyword, normalizer = "keyword_normalizer")
@@ -71,7 +71,7 @@ public class PcbPartsSearch implements Persistable<String> {
     )
     private String partsPackaging;
     @MultiField(
-            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer4_case_insensitive", fielddata = true),
             otherFields = {
                     @InnerField(suffix = "keyword", type = FieldType.Keyword),
                     @InnerField(suffix = "normalize", type = FieldType.Keyword, normalizer = "keyword_normalizer")

@@ -149,7 +149,7 @@ PUT pcbparts
       },
       "manufacturerName": {
         "type": "text",
-        "analyzer": "ngram_analyzer_case_insensitive",
+        "analyzer": "ngram_analyzer4_case_insensitive",
         "fields": {
           "keyword": {
             "type": "keyword",

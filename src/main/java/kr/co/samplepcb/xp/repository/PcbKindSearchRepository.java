@@ -72,7 +72,7 @@ public interface PcbKindSearchRepository extends ElasticsearchRepository<PcbKind
             refQuery.filter(targetQueryBuilder);
         }
         if (pcbKindSearchVM.getItemName() != null) {
-            refQuery.filter(QueryBuilders.matchQuery(PcbKindSearchField.ITEM_NAME, pcbKindSearchVM.getItemName()));
+            refQuery.must(QueryBuilders.matchQuery(PcbKindSearchField.ITEM_NAME, pcbKindSearchVM.getItemName()));
         }
         if (StringUtils.isNotEmpty(queryParam.getQ())) {
             refQuery.must(QueryBuilders.matchQuery(PcbKindSearchField.ITEM_NAME, queryParam.getQ()));
