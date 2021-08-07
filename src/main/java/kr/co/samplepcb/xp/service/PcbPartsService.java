@@ -196,11 +196,11 @@ public class PcbPartsService {
             pcbPartsSearch.setPartsPackaging(this.excelSubService.getCellStrValue(row, 7));
             pcbPartsSearch.setPackaging(packaging);
             pcbPartsSearch.setMoq(this.excelSubService.getCellNumberValue(row, 9).intValue());
-            pcbPartsSearch.setPrice1to10(this.excelSubService.getCellNumberValue(row, 10).intValue());
-            pcbPartsSearch.setPrice11to50(this.excelSubService.getCellNumberValue(row, 11).intValue());
-            pcbPartsSearch.setPrice51to100(this.excelSubService.getCellNumberValue(row, 12).intValue());
-            pcbPartsSearch.setPrice101to500(this.excelSubService.getCellNumberValue(row, 13).intValue());
-            pcbPartsSearch.setPrice501to1000(this.excelSubService.getCellNumberValue(row, 14).intValue());
+            pcbPartsSearch.setPrice1(this.excelSubService.getCellNumberValue(row, 10).intValue());
+            pcbPartsSearch.setPrice2(this.excelSubService.getCellNumberValue(row, 11).intValue());
+            pcbPartsSearch.setPrice3(this.excelSubService.getCellNumberValue(row, 12).intValue());
+            pcbPartsSearch.setPrice4(this.excelSubService.getCellNumberValue(row, 13).intValue());
+            pcbPartsSearch.setPrice5(this.excelSubService.getCellNumberValue(row, 14).intValue());
             pcbPartsSearch.setInventoryLevel(this.excelSubService.getCellNumberValue(row, 15).intValue());
             pcbPartsSearch.setMemo(this.excelSubService.getCellStrValue(row, 16));
             pcbPartsSearch.setOfferName(offerName);
@@ -208,6 +208,7 @@ public class PcbPartsService {
             pcbPartsSearch.setManagerName(this.excelSubService.getCellStrValue(row, 19));
             pcbPartsSearch.setManagerEmail(this.excelSubService.getCellStrValue(row, 20));
             pcbPartsSearch.setStatus(PcbPartsSearchField.Status.APPROVED.ordinal());
+            pcbPartsSearch.setMemberId(this.excelSubService.getCellStrValue(row, 21));
 
             log.info("pcb parts item prepare indexing : parts name={}", valueStr);
             pcbPartsSearchList.add(pcbPartsSearch);

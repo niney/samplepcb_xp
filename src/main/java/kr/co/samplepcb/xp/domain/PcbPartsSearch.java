@@ -52,7 +52,7 @@ public class PcbPartsSearch implements Persistable<String> {
             }
     )
     private String partName;
-    @Field(type = FieldType.Text, analyzer = "nori")
+    @Field(type = FieldType.Text, analyzer = "standard")
     private String description;
     @MultiField(
             mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer4_case_insensitive", fielddata = true),
@@ -84,15 +84,15 @@ public class PcbPartsSearch implements Persistable<String> {
     @Field(type = FieldType.Integer)
     private Integer price;
     @Field(type = FieldType.Integer)
-    private Integer price1to10;
+    private Integer price1; // 1~9
     @Field(type = FieldType.Integer)
-    private Integer price11to50;
+    private Integer price2; // 10 ~99
     @Field(type = FieldType.Integer)
-    private Integer price51to100;
+    private Integer price3; // 100~499
     @Field(type = FieldType.Integer)
-    private Integer price101to500;
+    private Integer price4; // 500~999
     @Field(type = FieldType.Integer)
-    private Integer price501to1000;
+    private Integer price5; // 1000~
 
     @Field(type = FieldType.Integer)
     private Integer inventoryLevel;
@@ -128,6 +128,10 @@ public class PcbPartsSearch implements Persistable<String> {
             }
     )
     private String managerEmail;
+    @Field(type = FieldType.Keyword, normalizer = "keyword_normalizer")
+    private String memberId;
+    @Field(type = FieldType.Text, analyzer = "nori")
+    private String specs;
     private Integer status;
 
     public String getId() {
@@ -239,44 +243,44 @@ public class PcbPartsSearch implements Persistable<String> {
         this.price = price;
     }
 
-    public Integer getPrice1to10() {
-        return price1to10;
+    public Integer getPrice1() {
+        return price1;
     }
 
-    public void setPrice1to10(Integer price1to10) {
-        this.price1to10 = price1to10;
+    public void setPrice1(Integer price1) {
+        this.price1 = price1;
     }
 
-    public Integer getPrice11to50() {
-        return price11to50;
+    public Integer getPrice2() {
+        return price2;
     }
 
-    public void setPrice11to50(Integer price11to50) {
-        this.price11to50 = price11to50;
+    public void setPrice2(Integer price2) {
+        this.price2 = price2;
     }
 
-    public Integer getPrice51to100() {
-        return price51to100;
+    public Integer getPrice3() {
+        return price3;
     }
 
-    public void setPrice51to100(Integer price51to100) {
-        this.price51to100 = price51to100;
+    public void setPrice3(Integer price3) {
+        this.price3 = price3;
     }
 
-    public Integer getPrice101to500() {
-        return price101to500;
+    public Integer getPrice4() {
+        return price4;
     }
 
-    public void setPrice101to500(Integer price101to500) {
-        this.price101to500 = price101to500;
+    public void setPrice4(Integer price4) {
+        this.price4 = price4;
     }
 
-    public Integer getPrice501to1000() {
-        return price501to1000;
+    public Integer getPrice5() {
+        return price5;
     }
 
-    public void setPrice501to1000(Integer price501to1000) {
-        this.price501to1000 = price501to1000;
+    public void setPrice5(Integer price5) {
+        this.price5 = price5;
     }
 
     public Integer getInventoryLevel() {
@@ -333,6 +337,22 @@ public class PcbPartsSearch implements Persistable<String> {
 
     public void setManagerEmail(String managerEmail) {
         this.managerEmail = managerEmail;
+    }
+
+    public String getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
+    }
+
+    public String getSpecs() {
+        return specs;
+    }
+
+    public void setSpecs(String specs) {
+        this.specs = specs;
     }
 
     public Integer getStatus() {

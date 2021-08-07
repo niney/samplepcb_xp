@@ -1,6 +1,5 @@
 package kr.co.samplepcb.xp.pojo;
 
-import kr.co.samplepcb.xp.domain.PcbPartsSearch;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
@@ -33,11 +32,11 @@ public class PcbPartsSearchVM {
     private String packaging;
     private Integer moq;
     private Integer price;
-    private Integer price1to10;
-    private Integer price11to50;
-    private Integer price51to100;
-    private Integer price101to500;
-    private Integer price501to1000;
+    private Integer price1; // 1~9
+    private Integer price2; // 10 ~99
+    private Integer price3; // 100~499
+    private Integer price4; // 500~999
+    private Integer price5; // 1000~
     private Integer inventoryLevel;
     private String memo;
     private String offerName;
@@ -45,8 +44,10 @@ public class PcbPartsSearchVM {
     private String managerPhoneNumber;
     private String managerName;
     private String managerEmail;
+    private String memberId;
     private Integer status;
     private List<Integer> statusList;
+    private String specs;
     private String token;
 
     public String getId() {
@@ -141,44 +142,44 @@ public class PcbPartsSearchVM {
         return pcbPartsSearchFields;
     }
 
-    public Integer getPrice1to10() {
-        return price1to10;
+    public Integer getPrice1() {
+        return price1;
     }
 
-    public void setPrice1to10(Integer price1to10) {
-        this.price1to10 = price1to10;
+    public void setPrice1(Integer price1) {
+        this.price1 = price1;
     }
 
-    public Integer getPrice11to50() {
-        return price11to50;
+    public Integer getPrice2() {
+        return price2;
     }
 
-    public void setPrice11to50(Integer price11to50) {
-        this.price11to50 = price11to50;
+    public void setPrice2(Integer price2) {
+        this.price2 = price2;
     }
 
-    public Integer getPrice51to100() {
-        return price51to100;
+    public Integer getPrice3() {
+        return price3;
     }
 
-    public void setPrice51to100(Integer price51to100) {
-        this.price51to100 = price51to100;
+    public void setPrice3(Integer price3) {
+        this.price3 = price3;
     }
 
-    public Integer getPrice101to500() {
-        return price101to500;
+    public Integer getPrice4() {
+        return price4;
     }
 
-    public void setPrice101to500(Integer price101to500) {
-        this.price101to500 = price101to500;
+    public void setPrice4(Integer price4) {
+        this.price4 = price4;
     }
 
-    public Integer getPrice501to1000() {
-        return price501to1000;
+    public Integer getPrice5() {
+        return price5;
     }
 
-    public void setPrice501to1000(Integer price501to1000) {
-        this.price501to1000 = price501to1000;
+    public void setPrice5(Integer price5) {
+        this.price5 = price5;
     }
 
     public Integer getInventoryLevel() {
@@ -235,6 +236,22 @@ public class PcbPartsSearchVM {
 
     public void setManagerEmail(String managerEmail) {
         this.managerEmail = managerEmail;
+    }
+
+    public String getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
+    }
+
+    public String getSpecs() {
+        return specs;
+    }
+
+    public void setSpecs(String specs) {
+        this.specs = specs;
     }
 
     public Integer getStatus() {

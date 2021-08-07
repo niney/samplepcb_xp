@@ -131,11 +131,11 @@ public class ExcelDownloadView extends AbstractXlsxView {
             createCellByMap(row, 7, parts, "partsPackaging");
             createCellByMap(row, 8, parts, "packaging");
             createCellByMap(row, 9, parts, "moq");
-            createCellByMap(row, 10, parts, "price1to10");
-            createCellByMap(row, 11, parts, "price11to50");
-            createCellByMap(row, 12, parts, "price51to100");
-            createCellByMap(row, 13, parts, "price101to500");
-            createCellByMap(row, 14, parts, "price501to1000");
+            createCellByMap(row, 10, parts, "price1");
+            createCellByMap(row, 11, parts, "price2");
+            createCellByMap(row, 12, parts, "price3");
+            createCellByMap(row, 13, parts, "price4");
+            createCellByMap(row, 14, parts, "price5");
             createCellByMap(row, 15, parts, "inventoryLevel");
             createCellByMap(row, 16, parts, "memo");
             createCellByMap(row, 17, parts, "offerName");

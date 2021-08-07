@@ -32,7 +32,6 @@ public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPar
                         .field(PcbPartsSearchField.LARGE_CATEGORY)
                         .field(PcbPartsSearchField.MEDIUM_CATEGORY)
                         .field(PcbPartsSearchField.SMALL_CATEGORY)
-                        .field(PcbPartsSearchField.DESCRIPTION)
                 );
     }
 
@@ -42,7 +41,6 @@ public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPar
         highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.LARGE_CATEGORY));
         highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.MEDIUM_CATEGORY));
         highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.SMALL_CATEGORY));
-        highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.DESCRIPTION));
         return this.makeWildcardPermitFieldQuery(query, refQuery);
     }
 
