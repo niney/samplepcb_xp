@@ -55,6 +55,7 @@ public class ApplicationProperties {
 
     public static class Auth {
         private String token = "6fb1af98cc1411ebb8bc0242ac130003";
+        private String samplepcbSiteToken;
 
         public String getToken() {
             return token;
@@ -62,6 +63,14 @@ public class ApplicationProperties {
 
         public void setToken(String token) {
             this.token = token;
+        }
+
+        public String getSamplepcbSiteToken() {
+            return samplepcbSiteToken;
+        }
+
+        public void setSamplepcbSiteToken(String samplepcbSiteToken) {
+            this.samplepcbSiteToken = samplepcbSiteToken;
         }
     }
 

@@ -29,11 +29,16 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.*;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
@@ -54,6 +59,7 @@ public class PcbPartsService {
 
     // prop
     private final ApplicationProperties applicationProperties;
+    private final String samplepcbToken;
 
     public PcbPartsService(RestHighLevelClient restHighLevelClient, PcbPartsSearchRepository pcbPartsSearchRepository, PcbKindSearchRepository pcbKindSearchRepository, ExcelSubService excelSubService, ApplicationProperties applicationProperties) {
         this.restHighLevelClient = restHighLevelClient;
@@ -61,6 +67,7 @@ public class PcbPartsService {
         this.pcbKindSearchRepository = pcbKindSearchRepository;
         this.excelSubService = excelSubService;
         this.applicationProperties = applicationProperties;
+        this.samplepcbToken = applicationProperties.getAuth().getSamplepcbSiteToken();
     }
 
     public CCResult indexing(PcbPartsSearchVM pcbPartsSearchVM) {
@@ -72,6 +79,14 @@ public class PcbPartsService {
                 return CCResult.dataNotFound();
             }
             pcbPartsSearch = findPcbPartsOpt.get();
+        } else {
+            PcbPartsSearch findPcbParts = this.pcbPartsSearchRepository.findByPartNameNormalizeAndMemberId(pcbPartsSearchVM.getPartName(), pcbPartsSearchVM.getMemberId());
+            if(findPcbParts != null) {
+                CCResult ccResult = new CCResult();
+                ccResult.setResult(false);
+                ccResult.setMessage("동일한 상품을 등록할 수 없습니다.");
+                return ccResult;
+            }
         }
         if (pcbPartsSearchVM.getStatus() == null) {
             pcbPartsSearchVM.setStatus(0);
@@ -87,6 +102,7 @@ public class PcbPartsService {
         return CCObjectResult.setSimpleData(this.pcbPartsSearchRepository.save(pcbPartsSearch));
     }
 
+    @SuppressWarnings({"rawtypes"})
     public CCResult search(Pageable pageable, QueryParam queryParam, PcbPartsSearchVM pcbPartsSearchVM) {
         BoolQueryBuilder query = boolQuery();
         HighlightBuilder highlightBuilder = new HighlightBuilder();
@@ -120,8 +136,36 @@ public class PcbPartsService {
                 null,
                 request -> request.indices(ElasticIndexName.PCB_PARTS)
         );
+        List<Map<String, Object>> respData = CoolElasticUtils.getSourceWithHighlightDetailInline(response);
 
-        return PagingAdapter.toCCPagingResult(pageable, CoolElasticUtils.getSourceWithHighlightDetailInline(response), response.getHits().getTotalHits().value);
+        if(!StringUtils.isEmpty(pcbPartsSearchVM.getId()) && respData.size() == 1) {
+            Map<String, Object> pcbParts = respData.get(0);
+            String memberId = (String) pcbParts.get(PcbPartsSearchField.MEMBER_ID);
+            // id 가 있는경우 담당자정보도 넣어준다
+            RestTemplate restTemplate = new RestTemplate();
+            URI uri = UriComponentsBuilder.newInstance()
+                    .scheme("http").host("samplepcb.co.kr").path("/shop/member_api.php")
+                    .queryParam("w", "mir") // member info read
+                    .queryParam("id", memberId)
+                    .queryParam("token", samplepcbToken)
+                    .build().toUri();
+            CCObjectResult<Map> memberResult = WebClient.create()
+                    .get()
+                    .uri(uri)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<CCObjectResult<Map>>() {}).block();
+            if(memberResult != null && memberResult.getData() != null) {
+                Map member = memberResult.getData();
+                String memberName = (String) member.get("mb_name");
+                String memberTel = (String) member.get("mb_tel");
+                String memberEmail = (String) member.get("mb_email");
+                pcbParts.put(PcbPartsSearchField.MANAGER_NAME, memberName);
+                pcbParts.put(PcbPartsSearchField.MANAGER_PHONE_NUMBER, memberTel);
+                pcbParts.put(PcbPartsSearchField.MANAGER_EMAIL, memberEmail);
+            }
+        }
+
+        return PagingAdapter.toCCPagingResult(pageable, respData, response.getHits().getTotalHits().value);
     }
 
     public CCResult deleteParts(List<String> ids) {
@@ -204,11 +248,8 @@ public class PcbPartsService {
             pcbPartsSearch.setInventoryLevel(this.excelSubService.getCellNumberValue(row, 15).intValue());
             pcbPartsSearch.setMemo(this.excelSubService.getCellStrValue(row, 16));
             pcbPartsSearch.setOfferName(offerName);
-            pcbPartsSearch.setManagerPhoneNumber(this.excelSubService.getCellStrValue(row, 18));
-            pcbPartsSearch.setManagerName(this.excelSubService.getCellStrValue(row, 19));
-            pcbPartsSearch.setManagerEmail(this.excelSubService.getCellStrValue(row, 20));
+            pcbPartsSearch.setMemberId(this.excelSubService.getCellStrValue(row, 18));
             pcbPartsSearch.setStatus(PcbPartsSearchField.Status.APPROVED.ordinal());
-            pcbPartsSearch.setMemberId(this.excelSubService.getCellStrValue(row, 21));
 
             log.info("pcb parts item prepare indexing : parts name={}", valueStr);
             pcbPartsSearchList.add(pcbPartsSearch);

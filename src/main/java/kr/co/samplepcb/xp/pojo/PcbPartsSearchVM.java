@@ -41,9 +41,6 @@ public class PcbPartsSearchVM {
     private String memo;
     private String offerName;
     private List<PcbImageVM> images;
-    private String managerPhoneNumber;
-    private String managerName;
-    private String managerEmail;
     private String memberId;
     private Integer status;
     private List<Integer> statusList;
@@ -212,30 +209,6 @@ public class PcbPartsSearchVM {
 
     public void setImages(List<PcbImageVM> images) {
         this.images = images;
-    }
-
-    public String getManagerPhoneNumber() {
-        return managerPhoneNumber;
-    }
-
-    public void setManagerPhoneNumber(String managerPhoneNumber) {
-        this.managerPhoneNumber = managerPhoneNumber;
-    }
-
-    public String getManagerName() {
-        return managerName;
-    }
-
-    public void setManagerName(String managerName) {
-        this.managerName = managerName;
-    }
-
-    public String getManagerEmail() {
-        return managerEmail;
-    }
-
-    public void setManagerEmail(String managerEmail) {
-        this.managerEmail = managerEmail;
     }
 
     public String getMemberId() {

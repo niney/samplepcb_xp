@@ -32,3 +32,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+
+# conf
+application-dev.yaml
+application-prod.yaml

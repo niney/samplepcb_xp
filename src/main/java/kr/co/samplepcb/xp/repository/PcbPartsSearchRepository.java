@@ -12,16 +12,34 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 import java.lang.reflect.Field;
-import java.util.List;
 
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 
 public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPartsSearch, String> {
 
     Logger log = LoggerFactory.getLogger(PcbPartsSearchRepository.class);
+
+    @Query("{\n" +
+            "    \"bool\": {\n" +
+            "      \"must\": [\n" +
+            "        {\n" +
+            "          \"match\": {\n" +
+            "            \"partName.normalize\": \"?0\"\n" +
+            "          }\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"match\": {\n" +
+            "            \"memberId\": \"?1\"\n" +
+            "          }\n" +
+            "        }\n" +
+            "      ]\n" +
+            "    }\n" +
+            "  }")
+    PcbPartsSearch findByPartNameNormalizeAndMemberId(String partName, String memberId);
 
 
     default QueryBuilder makeWildcardPermitFieldQuery(String query, BoolQueryBuilder refQuery) {

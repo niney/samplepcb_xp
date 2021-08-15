@@ -21,10 +21,10 @@ public class PcbPartsSearchField {
             PCB_PART_TARGET_IDX_COLUMN.put(PCB_PART_COLUMN_IDX_TARGET[i], i);
         }
     }
-    
+
     public enum Status {
         NOT_APPROVED(0), APPROVED(1);
-        
+
         private final int value;
 
         Status(int value) {
@@ -43,4 +43,8 @@ public class PcbPartsSearchField {
     public static final String PARTS_PACKAGING  = "partsPackaging";
     public static final String STATUS = "status";
     public static final String WRITE_DATE = "writeDate";
+    public static final String MANAGER_NAME = "managerName";
+    public static final String MANAGER_PHONE_NUMBER = "managerPhoneNumber";
+    public static final String MANAGER_EMAIL = "managerEmail";
+    public static final String MEMBER_ID = "memberId";
 }
