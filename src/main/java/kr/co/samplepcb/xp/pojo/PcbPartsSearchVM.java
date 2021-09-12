@@ -22,6 +22,7 @@ public class PcbPartsSearchVM {
     }
 
     private String id;
+    private List<String> ids;
     private String largeCategory;
     private String mediumCategory;
     private String smallCategory;
@@ -44,8 +45,9 @@ public class PcbPartsSearchVM {
     private String memberId;
     private Integer status;
     private List<Integer> statusList;
-    private String specs;
+    private String contents;
     private String token;
+    private List<PcbPartSpec> specs;
 
     public String getId() {
         return id;
@@ -53,6 +55,14 @@ public class PcbPartsSearchVM {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public List<String> getIds() {
+        return ids;
+    }
+
+    public void setIds(List<String> ids) {
+        this.ids = ids;
     }
 
     public String getLargeCategory() {
@@ -219,12 +229,12 @@ public class PcbPartsSearchVM {
         this.memberId = memberId;
     }
 
-    public String getSpecs() {
-        return specs;
+    public String getContents() {
+        return contents;
     }
 
-    public void setSpecs(String specs) {
-        this.specs = specs;
+    public void setContents(String contents) {
+        this.contents = contents;
     }
 
     public Integer getStatus() {
@@ -249,5 +259,13 @@ public class PcbPartsSearchVM {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public List<PcbPartSpec> getSpecs() {
+        return specs;
+    }
+
+    public void setSpecs(List<PcbPartSpec> specs) {
+        this.specs = specs;
     }
 }

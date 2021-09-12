@@ -4,6 +4,7 @@ import coolib.common.QueryParam;
 import kr.co.samplepcb.xp.domain.PcbPartsSearch;
 import kr.co.samplepcb.xp.pojo.PcbPartsSearchField;
 import kr.co.samplepcb.xp.pojo.PcbPartsSearchVM;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -16,7 +17,9 @@ import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 
 public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPartsSearch, String> {
@@ -82,6 +85,14 @@ public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPar
             } catch (IllegalAccessException e) {
                 log.error(e.getMessage());
             }
+        }
+        if(CollectionUtils.isNotEmpty(pcbPartsSearchVM.getIds())) {
+            BoolQueryBuilder idsQuery = QueryBuilders.boolQuery();
+            List<String> ids = pcbPartsSearchVM.getIds();
+            for (String id : ids) {
+                idsQuery.should(matchQuery("_id", id));
+            }
+            refQuery.must(idsQuery);
         }
         return refQuery;
     }

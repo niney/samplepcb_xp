@@ -2,6 +2,7 @@ package kr.co.samplepcb.xp.domain;
 
 import kr.co.samplepcb.xp.pojo.ElasticIndexName;
 import kr.co.samplepcb.xp.pojo.PcbImageVM;
+import kr.co.samplepcb.xp.pojo.PcbPartSpec;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -110,8 +111,10 @@ public class PcbPartsSearch implements Persistable<String> {
     @Field(type = FieldType.Keyword, normalizer = "keyword_normalizer")
     private String memberId;
     @Field(type = FieldType.Text, analyzer = "nori")
-    private String specs;
+    private String contents;
     private Integer status;
+    @Field(type = FieldType.Nested)
+    private List<PcbPartSpec> specs;
 
     public String getId() {
         return id;
@@ -302,12 +305,12 @@ public class PcbPartsSearch implements Persistable<String> {
         this.memberId = memberId;
     }
 
-    public String getSpecs() {
-        return specs;
+    public String getContents() {
+        return contents;
     }
 
-    public void setSpecs(String specs) {
-        this.specs = specs;
+    public void setContents(String contents) {
+        this.contents = contents;
     }
 
     public Integer getStatus() {
@@ -316,5 +319,13 @@ public class PcbPartsSearch implements Persistable<String> {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public List<PcbPartSpec> getSpecs() {
+        return specs;
+    }
+
+    public void setSpecs(List<PcbPartSpec> specs) {
+        this.specs = specs;
     }
 }

@@ -54,6 +54,11 @@ public class PcbPartsResource {
         return this.pcbPartsService.search(pageable, queryParam, pcbPartsSearchVM);
     }
 
+    @PostMapping("/_search")
+    public CCResult postSearch(@PageableDefault Pageable pageable, QueryParam queryParam, @RequestBody PcbPartsSearchVM pcbPartsSearchVM) {
+        return this.pcbPartsService.search(pageable, queryParam, pcbPartsSearchVM);
+    }
+
     @PostMapping("/_delete")
     public CCResult deleteParts(@RequestParam List<String> ids) {
         return this.pcbPartsService.deleteParts(ids);
