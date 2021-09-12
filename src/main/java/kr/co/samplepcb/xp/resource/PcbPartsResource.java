@@ -8,6 +8,8 @@ import kr.co.samplepcb.xp.domain.PcbPartsSearch;
 import kr.co.samplepcb.xp.pojo.PcbPartsSearchVM;
 import kr.co.samplepcb.xp.service.ExcelDownloadView;
 import kr.co.samplepcb.xp.service.PcbPartsService;
+import kr.co.samplepcb.xp.util.XssSanitizerUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -46,6 +48,10 @@ public class PcbPartsResource {
 
     @PostMapping(value = "/_indexing", produces = {"application/json", "application/x-www-form-urlencoded"})
     public CCResult indexing(@RequestBody PcbPartsSearchVM pcbPartsSearchVM) {
+        if(StringUtils.isNotEmpty(pcbPartsSearchVM.getContents())) {
+            // contents xss filter
+            pcbPartsSearchVM.setContents(XssSanitizerUtil.stripXSS(pcbPartsSearchVM.getContents()));
+        }
         return this.pcbPartsService.indexing(pcbPartsSearchVM);
     }
 
