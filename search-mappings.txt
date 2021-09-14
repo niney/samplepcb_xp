@@ -107,6 +107,12 @@ PUT pcbparts
             "filter": [
               "lowercase"
             ]
+          },
+          "ngram_analyzer6_case_insensitive": {
+            "tokenizer": "ngram_tokenizer6",
+            "filter": [
+              "lowercase"
+            ]
           }
         },
         "tokenizer": {
@@ -118,6 +124,11 @@ PUT pcbparts
             "type": "ngram",
             "min_gram": 4,
             "max_gram": 4
+          },
+          "ngram_tokenizer6": {
+            "type": "ngram",
+            "min_gram": 6,
+            "max_gram": 6
           }
         },
         "normalizer": {
@@ -135,7 +146,7 @@ PUT pcbparts
     "properties": {
       "partName": {
         "type": "text",
-        "analyzer": "ngram_analyzer4_case_insensitive",
+        "analyzer": "ngram_analyzer6_case_insensitive",
         "fields": {
           "keyword": {
             "type": "keyword",

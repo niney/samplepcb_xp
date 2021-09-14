@@ -46,10 +46,11 @@ public class PcbPartsSearch implements Persistable<String> {
     )
     private String smallCategory;
     @MultiField(
-            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer4_case_insensitive", fielddata = true),
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer6_case_insensitive", fielddata = true),
             otherFields = {
                     @InnerField(suffix = "keyword", type = FieldType.Keyword),
-                    @InnerField(suffix = "normalize", type = FieldType.Keyword, normalizer = "keyword_normalizer")
+                    @InnerField(suffix = "normalize", type = FieldType.Keyword, normalizer = "keyword_normalizer"),
+                    @InnerField(suffix = "ngram4", type = FieldType.Text, analyzer = "ngram_analyzer4_case_insensitive")
             }
     )
     private String partName;
