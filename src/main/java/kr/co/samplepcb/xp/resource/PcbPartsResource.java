@@ -1,21 +1,24 @@
 package kr.co.samplepcb.xp.resource;
 
-import coolib.common.CCObjectResult;
 import coolib.common.CCPagingResult;
 import coolib.common.CCResult;
 import coolib.common.QueryParam;
 import kr.co.samplepcb.xp.domain.PcbPartsSearch;
+import kr.co.samplepcb.xp.pojo.PcbPartsSearchField;
 import kr.co.samplepcb.xp.pojo.PcbPartsSearchVM;
 import kr.co.samplepcb.xp.service.ExcelDownloadView;
 import kr.co.samplepcb.xp.service.PcbPartsService;
 import kr.co.samplepcb.xp.util.XssSanitizerUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.search.sort.ScoreSortBuilder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
@@ -56,12 +59,20 @@ public class PcbPartsResource {
     }
 
     @GetMapping("/_search")
-    public CCResult search(@PageableDefault Pageable pageable, QueryParam queryParam, PcbPartsSearchVM pcbPartsSearchVM) {
+    public CCResult search(@PageableDefault @SortDefault.SortDefaults({
+            @SortDefault(sort = ScoreSortBuilder.NAME, direction = Sort.Direction.DESC), // 높은 점수
+            @SortDefault(sort = PcbPartsSearchField.INVENTORY_LEVEL, direction = Sort.Direction.DESC), // 재고 있음(많음)
+            @SortDefault(sort = PcbPartsSearchField.PRICE1, direction = Sort.Direction.ASC) // 낮은 가격
+    }) Pageable pageable, QueryParam queryParam, PcbPartsSearchVM pcbPartsSearchVM) {
         return this.pcbPartsService.search(pageable, queryParam, pcbPartsSearchVM);
     }
 
     @PostMapping("/_search")
-    public CCResult postSearch(@PageableDefault Pageable pageable, QueryParam queryParam, @RequestBody PcbPartsSearchVM pcbPartsSearchVM) {
+    public CCResult postSearch(@PageableDefault @SortDefault.SortDefaults({
+            @SortDefault(sort = ScoreSortBuilder.NAME, direction = Sort.Direction.DESC), // 높은 점수
+            @SortDefault(sort = PcbPartsSearchField.INVENTORY_LEVEL, direction = Sort.Direction.DESC), // 재고 있음(많음)
+            @SortDefault(sort = PcbPartsSearchField.PRICE1, direction = Sort.Direction.ASC) // 낮은 가격
+    }) Pageable pageable, QueryParam queryParam, @RequestBody PcbPartsSearchVM pcbPartsSearchVM) {
         return this.pcbPartsService.search(pageable, queryParam, pcbPartsSearchVM);
     }
 

@@ -33,6 +33,7 @@ public class PcbPartsSearchField {
     }
 
     public static final String PART_NAME  = "partName";
+    public static final String SERVICE_TYPE  = "serviceType";
     public static final String LARGE_CATEGORY  = "largeCategory";
     public static final String MEDIUM_CATEGORY  = "mediumCategory";
     public static final String SMALL_CATEGORY  = "smallCategory";
@@ -47,4 +48,6 @@ public class PcbPartsSearchField {
     public static final String MANAGER_PHONE_NUMBER = "managerPhoneNumber";
     public static final String MANAGER_EMAIL = "managerEmail";
     public static final String MEMBER_ID = "memberId";
+    public static final String INVENTORY_LEVEL = "inventoryLevel";
+    public static final String PRICE1 = "price1";
 }

@@ -106,7 +106,7 @@ public class PcbPartsService {
     public CCResult search(Pageable pageable, QueryParam queryParam, PcbPartsSearchVM pcbPartsSearchVM) {
         BoolQueryBuilder query = boolQuery();
         HighlightBuilder highlightBuilder = new HighlightBuilder();
-        QueryBuilder queryBuilder;
+        BoolQueryBuilder queryBuilder;
         if(StringUtils.isNotEmpty(queryParam.getQ())) {
             this.pcbPartsSearchRepository.makeWildcardPermitFieldQuery(queryParam.getQ(), query, highlightBuilder);
         }
@@ -122,10 +122,10 @@ public class PcbPartsService {
                 for (Integer status : statusList) {
                     statusQuery.should(matchQuery(PcbPartsSearchField.STATUS, status));
                 }
-                ((BoolQueryBuilder) queryBuilder).filter(statusQuery);
+                queryBuilder.filter(statusQuery);
             }
-        } else {
-            ((BoolQueryBuilder) queryBuilder).filter(QueryBuilders.matchQuery(PcbPartsSearchField.STATUS, 1));
+        } else if (StringUtils.isEmpty(pcbPartsSearchVM.getMemberId())) { // member id 가 비어있으면 filter 걸기
+            queryBuilder.filter(QueryBuilders.matchQuery(PcbPartsSearchField.STATUS, 1));
         }
 
         SearchResponse response = CoolElasticUtils.search(

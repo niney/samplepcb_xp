@@ -19,8 +19,7 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 import java.lang.reflect.Field;
 import java.util.List;
 
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 
 public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPartsSearch, String> {
 
@@ -65,7 +64,8 @@ public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPar
         return this.makeWildcardPermitFieldQuery(query, refQuery);
     }
 
-    default QueryBuilder searchByColumnSearch(PcbPartsSearchVM pcbPartsSearchVM, QueryParam queryParam, BoolQueryBuilder refQuery, HighlightBuilder highlightBuilder) {
+    default BoolQueryBuilder searchByColumnSearch(PcbPartsSearchVM pcbPartsSearchVM, QueryParam queryParam, BoolQueryBuilder refQuery, HighlightBuilder highlightBuilder) {
+        BoolQueryBuilder categoryQuery = QueryBuilders.boolQuery();
         for (Field pcbPartsSearchField : PcbPartsSearchVM.pcbPartsSearchFields) {
             try {
                 Object value = pcbPartsSearchField.get(pcbPartsSearchVM);
@@ -74,11 +74,22 @@ public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPar
                     if(name.equals("token")) {
                         continue;
                     }
+                    // 카테고리 대중소 or 로 만들어줌
+                    if(name.equals(PcbPartsSearchField.LARGE_CATEGORY) ||
+                            name.equals(PcbPartsSearchField.MEDIUM_CATEGORY) ||
+                            name.equals(PcbPartsSearchField.SMALL_CATEGORY) ||
+                            name.equals(PcbPartsSearchField.SERVICE_TYPE)) {
+                        categoryQuery.should(QueryBuilders.matchQuery(name, value));
+                        continue;
+                    }
                     if(name.equals("id")) {
                         name = "_id";
                         refQuery.filter(QueryBuilders.matchQuery(name, value));
                     } else {
-                        highlightBuilder.field(new HighlightBuilder.Field(name));
+                        HighlightBuilder.Field field = new HighlightBuilder.Field(name);
+                        if(!highlightBuilder.fields().contains(field)) {
+                            highlightBuilder.field(field);
+                        }
                         refQuery.must(QueryBuilders.matchQuery(name, value));
                     }
                 }
@@ -93,6 +104,16 @@ public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPar
                 idsQuery.should(matchQuery("_id", id));
             }
             refQuery.must(idsQuery);
+        }
+        // 카테고리 쿼리가 존재하면 적용
+        if(categoryQuery.hasClauses()) {
+            refQuery.filter(categoryQuery);
+        }
+        // serviceType 기본은 필드 존재 하지 않음
+        if (StringUtils.isEmpty(pcbPartsSearchVM.getServiceType())) {
+            refQuery.mustNot(existsQuery(PcbPartsSearchField.SERVICE_TYPE));
+        } else {
+            refQuery.must(matchQuery(PcbPartsSearchField.SERVICE_TYPE, pcbPartsSearchVM.getServiceType()));
         }
         return refQuery;
     }

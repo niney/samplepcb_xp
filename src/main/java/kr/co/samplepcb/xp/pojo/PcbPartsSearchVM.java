@@ -23,6 +23,8 @@ public class PcbPartsSearchVM {
 
     private String id;
     private List<String> ids;
+    private String serviceType;
+    private String subServiceType;
     private String largeCategory;
     private String mediumCategory;
     private String smallCategory;
@@ -63,6 +65,22 @@ public class PcbPartsSearchVM {
 
     public void setIds(List<String> ids) {
         this.ids = ids;
+    }
+
+    public String getServiceType() {
+        return serviceType;
+    }
+
+    public void setServiceType(String serviceType) {
+        this.serviceType = serviceType;
+    }
+
+    public String getSubServiceType() {
+        return subServiceType;
+    }
+
+    public void setSubServiceType(String subServiceType) {
+        this.subServiceType = subServiceType;
     }
 
     public String getLargeCategory() {

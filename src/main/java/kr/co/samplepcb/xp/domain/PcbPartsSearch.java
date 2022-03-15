@@ -21,6 +21,10 @@ public class PcbPartsSearch implements Persistable<String> {
     private Date writeDate;
     @LastModifiedDate
     private Date lastModifiedDate;
+    @Field(type = FieldType.Keyword, normalizer = "keyword_normalizer")
+    private String serviceType;
+    @Field(type = FieldType.Keyword, normalizer = "keyword_normalizer")
+    private String subServiceType;
     @MultiField(
             mainField = @Field(type = FieldType.Text, analyzer = "nori", fielddata = true),
             otherFields = {
@@ -144,6 +148,22 @@ public class PcbPartsSearch implements Persistable<String> {
 
     public void setLastModifiedDate(Date lastModifiedDate) {
         this.lastModifiedDate = lastModifiedDate;
+    }
+
+    public String getServiceType() {
+        return serviceType;
+    }
+
+    public void setServiceType(String serviceType) {
+        this.serviceType = serviceType;
+    }
+
+    public String getSubServiceType() {
+        return subServiceType;
+    }
+
+    public void setSubServiceType(String subServiceType) {
+        this.subServiceType = subServiceType;
     }
 
     public String getLargeCategory() {
