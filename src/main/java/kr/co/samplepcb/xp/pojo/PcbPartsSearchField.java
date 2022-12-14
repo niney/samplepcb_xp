@@ -44,9 +44,12 @@ public class PcbPartsSearchField {
     public static final String PARTS_PACKAGING  = "partsPackaging";
     public static final String STATUS = "status";
     public static final String WRITE_DATE = "writeDate";
-    public static final String MANAGER_NAME = "managerName";
-    public static final String MANAGER_PHONE_NUMBER = "managerPhoneNumber";
-    public static final String MANAGER_EMAIL = "managerEmail";
+    public static final String CURRENT_MEMBER_NAME = "currentMemberName";
+    public static final String CURRENT_MEMBER_PHONE_NUMBER = "currentMemberPhoneNumber";
+    public static final String CURRENT_MEMBER_EMAIL = "currentMemberEmail";
+    public static final String CURRENT_MANAGER_NAME = "currentManagerName";
+    public static final String CURRENT_MANAGER_PHONE_NUMBER = "currentManagerPhoneNumber";
+    public static final String CURRENT_MANAGER_EMAIL = "currentManagerEmail";
     public static final String MEMBER_ID = "memberId";
     public static final String INVENTORY_LEVEL = "inventoryLevel";
     public static final String PRICE1 = "price1";

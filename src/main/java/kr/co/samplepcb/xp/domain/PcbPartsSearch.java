@@ -114,7 +114,30 @@ public class PcbPartsSearch implements Persistable<String> {
     @Field(type = FieldType.Nested)
     private List<PcbImageVM> images;
     @Field(type = FieldType.Keyword, normalizer = "keyword_normalizer")
+    private String dataCode;
+    @Field(type = FieldType.Keyword, normalizer = "keyword_normalizer")
     private String memberId;
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword)
+            }
+    )
+    private String managerPhoneNumber;
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword)
+            }
+    )
+    private String managerName;
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword)
+            }
+    )
+    private String managerEmail;
     @Field(type = FieldType.Text, analyzer = "nori")
     private String contents;
     private Integer status;
@@ -318,12 +341,44 @@ public class PcbPartsSearch implements Persistable<String> {
         this.images = images;
     }
 
+    public String getDataCode() {
+        return dataCode;
+    }
+
+    public void setDataCode(String dataCode) {
+        this.dataCode = dataCode;
+    }
+
     public String getMemberId() {
         return memberId;
     }
 
     public void setMemberId(String memberId) {
         this.memberId = memberId;
+    }
+
+    public String getManagerPhoneNumber() {
+        return managerPhoneNumber;
+    }
+
+    public void setManagerPhoneNumber(String managerPhoneNumber) {
+        this.managerPhoneNumber = managerPhoneNumber;
+    }
+
+    public String getManagerName() {
+        return managerName;
+    }
+
+    public void setManagerName(String managerName) {
+        this.managerName = managerName;
+    }
+
+    public String getManagerEmail() {
+        return managerEmail;
+    }
+
+    public void setManagerEmail(String managerEmail) {
+        this.managerEmail = managerEmail;
     }
 
     public String getContents() {

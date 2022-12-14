@@ -44,7 +44,11 @@ public class PcbPartsSearchVM {
     private String memo;
     private String offerName;
     private List<PcbImageVM> images;
+    private String dataCode;
     private String memberId;
+    private String managerPhoneNumber;
+    private String managerName;
+    private String managerEmail;
     private Integer status;
     private List<Integer> statusList;
     private String contents;
@@ -239,12 +243,44 @@ public class PcbPartsSearchVM {
         this.images = images;
     }
 
+    public String getDataCode() {
+        return dataCode;
+    }
+
+    public void setDataCode(String dataCode) {
+        this.dataCode = dataCode;
+    }
+
     public String getMemberId() {
         return memberId;
     }
 
     public void setMemberId(String memberId) {
         this.memberId = memberId;
+    }
+
+    public String getManagerPhoneNumber() {
+        return managerPhoneNumber;
+    }
+
+    public void setManagerPhoneNumber(String managerPhoneNumber) {
+        this.managerPhoneNumber = managerPhoneNumber;
+    }
+
+    public String getManagerName() {
+        return managerName;
+    }
+
+    public void setManagerName(String managerName) {
+        this.managerName = managerName;
+    }
+
+    public String getManagerEmail() {
+        return managerEmail;
+    }
+
+    public void setManagerEmail(String managerEmail) {
+        this.managerEmail = managerEmail;
     }
 
     public String getContents() {

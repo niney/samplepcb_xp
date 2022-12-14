@@ -72,6 +72,19 @@ public class PcbPartsService {
 
     public CCResult indexing(PcbPartsSearchVM pcbPartsSearchVM) {
 
+        boolean isPermitSamePartName;
+        if (StringUtils.isEmpty(pcbPartsSearchVM.getServiceType())) {
+            pcbPartsSearchVM.setServiceType("");
+        }
+        switch (pcbPartsSearchVM.getServiceType()) {
+            case "openMarket":
+                isPermitSamePartName = true;
+                break;
+            default:
+                isPermitSamePartName = false;
+                break;
+        }
+
         PcbPartsSearch pcbPartsSearch = new PcbPartsSearch();
         if(StringUtils.isNotEmpty(pcbPartsSearchVM.getId())) {
             Optional<PcbPartsSearch> findPcbPartsOpt = this.pcbPartsSearchRepository.findById(pcbPartsSearchVM.getId());
@@ -80,22 +93,36 @@ public class PcbPartsService {
             }
             pcbPartsSearch = findPcbPartsOpt.get();
         } else {
-            PcbPartsSearch findPcbParts = this.pcbPartsSearchRepository.findByPartNameNormalizeAndMemberId(pcbPartsSearchVM.getPartName(), pcbPartsSearchVM.getMemberId());
-            if(findPcbParts != null) {
-                CCResult ccResult = new CCResult();
-                ccResult.setResult(false);
-                ccResult.setMessage("동일한 상품을 등록할 수 없습니다.");
-                return ccResult;
+            if(!isPermitSamePartName) {
+                PcbPartsSearch findPcbParts = this.pcbPartsSearchRepository.findByPartNameNormalizeAndMemberId(pcbPartsSearchVM.getPartName(), pcbPartsSearchVM.getMemberId());
+                if (findPcbParts != null) {
+                    CCResult ccResult = new CCResult();
+                    ccResult.setResult(false);
+                    ccResult.setMessage("동일한 상품을 등록할 수 없습니다.");
+                    return ccResult;
+                }
             }
         }
         if (pcbPartsSearchVM.getStatus() == null) {
             pcbPartsSearchVM.setStatus(0);
         }
-        if(StringUtils.isNotEmpty(pcbPartsSearchVM.getToken()) // 토큰값이 있지만 값이 안맞는경우
-                && !pcbPartsSearchVM.getToken().equals(applicationProperties.getAuth().getToken())
-                // token 값이 없는경우
-                || StringUtils.isEmpty(pcbPartsSearchVM.getToken())) {
-            pcbPartsSearchVM.setStatus(0);
+
+        switch (pcbPartsSearchVM.getServiceType()) {
+            case "openMarket":
+                // 오픈마켓은 일단 승인처리
+                pcbPartsSearchVM.setStatus(1);
+                break;
+            default:
+                if (StringUtils.isNotEmpty(pcbPartsSearchVM.getToken()) // 토큰값이 있지만 값이 안맞는경우
+                        && !pcbPartsSearchVM.getToken().equals(applicationProperties.getAuth().getToken())
+                        // token 값이 없는경우
+                        || StringUtils.isEmpty(pcbPartsSearchVM.getToken())) {
+                    pcbPartsSearchVM.setStatus(0);
+                }
+                break;
+        }
+        if (StringUtils.isEmpty(pcbPartsSearchVM.getServiceType())) {
+            pcbPartsSearchVM.setServiceType(null);
         }
         BeanUtils.copyProperties(pcbPartsSearchVM, pcbPartsSearch);
 
@@ -108,7 +135,7 @@ public class PcbPartsService {
         HighlightBuilder highlightBuilder = new HighlightBuilder();
         BoolQueryBuilder queryBuilder;
         if(StringUtils.isNotEmpty(queryParam.getQ())) {
-            this.pcbPartsSearchRepository.makeWildcardPermitFieldQuery(queryParam.getQ(), query, highlightBuilder);
+            this.pcbPartsSearchRepository.makeWildcardPermitFieldQuery(queryParam.getQf(), queryParam.getQ(), query, highlightBuilder);
         }
         queryBuilder = this.pcbPartsSearchRepository.searchByColumnSearch(pcbPartsSearchVM, queryParam, query, highlightBuilder);
 
@@ -159,9 +186,15 @@ public class PcbPartsService {
                 String memberName = (String) member.get("mb_name");
                 String memberTel = (String) member.get("mb_tel");
                 String memberEmail = (String) member.get("mb_email");
-                pcbParts.put(PcbPartsSearchField.MANAGER_NAME, memberName);
-                pcbParts.put(PcbPartsSearchField.MANAGER_PHONE_NUMBER, memberTel);
-                pcbParts.put(PcbPartsSearchField.MANAGER_EMAIL, memberEmail);
+                String managerName = (String) member.get("mb_7");
+                String managerTel = (String) member.get("mb_9");
+                String managerEmail = (String) member.get("mb_15");
+                pcbParts.put(PcbPartsSearchField.CURRENT_MEMBER_NAME, memberName);
+                pcbParts.put(PcbPartsSearchField.CURRENT_MEMBER_PHONE_NUMBER, memberTel);
+                pcbParts.put(PcbPartsSearchField.CURRENT_MEMBER_EMAIL, memberEmail);
+                pcbParts.put(PcbPartsSearchField.CURRENT_MANAGER_NAME, managerName);
+                pcbParts.put(PcbPartsSearchField.CURRENT_MANAGER_PHONE_NUMBER, managerTel);
+                pcbParts.put(PcbPartsSearchField.CURRENT_MANAGER_EMAIL, managerEmail);
             }
         }
 
