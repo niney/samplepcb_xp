@@ -41,6 +41,8 @@ public class PcbItemService {
 
     private static final Logger log = LoggerFactory.getLogger(PcbItemService.class);
 
+    public static final String[] PCB_ITEM_TARGET_NAMES = new String[]{"", "Reference", "Part Number", "Description", "Qty", "Manufacturer", "Package", "Current", "W", "Value", "Tolerance", "Voltage", "datasheet", "item", "menu"};
+
     // search
     private final RestHighLevelClient restHighLevelClient;
     private final PcbItemSearchRepository pcbItemSearchRepository;
@@ -184,7 +186,7 @@ public class PcbItemService {
 
     public List<List<PcbItemSearchVM>> getAllItemGroupByTarget() {
         List<List<PcbItemSearchVM>> pcbItemLists = new ArrayList<>();
-        for (int target = 1; target <= 13; target++) {
+        for (int target = 1; target <= PCB_ITEM_TARGET_NAMES.length - 1; target++) {
             Iterable<PcbItemSearch> itemSearches = this.pcbItemSearchRepository.findAllByTarget(target);
             List<PcbItemSearchVM> pcbItemSearchVMList = new ArrayList<>();
             itemSearches.forEach(pcbItemSearch -> {

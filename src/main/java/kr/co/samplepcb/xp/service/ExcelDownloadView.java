@@ -15,6 +15,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
+import static kr.co.samplepcb.xp.service.PcbItemService.PCB_ITEM_TARGET_NAMES;
+
 @Component(ExcelDownloadView.VIEW_NAME)
 public class ExcelDownloadView extends AbstractXlsxView {
 
@@ -53,13 +55,11 @@ public class ExcelDownloadView extends AbstractXlsxView {
     private void makeBomItemList(List<List<PcbItemSearchVM>> pcbItemLists, Workbook workbook, HttpServletResponse response) {
         response.setHeader("Content-Disposition", "attachment; filename=\"samplepcb_bom.xlsx\"");
 
-        String[] targetName = {"", "Reference", "Part Number", "Description", "Qty", "Manufacturer", "Package", "Current", "W", "Value", "Tolerance", "Voltage", "datasheet", "item"};
-
         for (List<PcbItemSearchVM> pcbItemList : pcbItemLists) {
             if(CollectionUtils.isEmpty(pcbItemList)) {
                 continue;
             }
-            Sheet sheet = workbook.createSheet(targetName[pcbItemList.get(0).getTarget()]);
+            Sheet sheet = workbook.createSheet(PCB_ITEM_TARGET_NAMES[pcbItemList.get(0).getTarget()]);
             for (int j = 0; j < pcbItemList.size(); j++) {
                 Row row = sheet.createRow(j);
                 PcbItemSearchVM pcbItem = pcbItemList.get(j);
