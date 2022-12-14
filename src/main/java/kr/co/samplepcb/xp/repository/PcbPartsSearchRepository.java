@@ -44,7 +44,10 @@ public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPar
     PcbPartsSearch findByPartNameNormalizeAndMemberId(String partName, String memberId);
 
 
-    default QueryBuilder makeWildcardPermitFieldQuery(String query, BoolQueryBuilder refQuery) {
+    default QueryBuilder makeWildcardPermitFieldQuery(String qf, String query, BoolQueryBuilder refQuery) {
+        if (StringUtils.isNotEmpty(qf)) {
+            return refQuery.must(matchQuery(qf, query));
+        }
         return refQuery
                 .must(queryStringQuery(QueryParser.escape(query))
                         .field(PcbPartsSearchField.PART_NAME)
@@ -55,13 +58,13 @@ public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPar
                 );
     }
 
-    default QueryBuilder makeWildcardPermitFieldQuery(String query, BoolQueryBuilder refQuery, HighlightBuilder highlightBuilder) {
+    default QueryBuilder makeWildcardPermitFieldQuery(String qf, String query, BoolQueryBuilder refQuery, HighlightBuilder highlightBuilder) {
         highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.PART_NAME));
         highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.MANUFACTURER_NAME));
         highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.LARGE_CATEGORY));
         highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.MEDIUM_CATEGORY));
         highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.SMALL_CATEGORY));
-        return this.makeWildcardPermitFieldQuery(query, refQuery);
+        return this.makeWildcardPermitFieldQuery(qf, query, refQuery);
     }
 
     default BoolQueryBuilder searchByColumnSearch(PcbPartsSearchVM pcbPartsSearchVM, QueryParam queryParam, BoolQueryBuilder refQuery, HighlightBuilder highlightBuilder) {
