@@ -54,7 +54,7 @@ public class ApplicationProperties {
     }
 
     public static class Auth {
-        private String token = "6fb1af98cc1411ebb8bc0242ac130003";
+        private String token = "7025cd62f74111eb9a030242ac130003";
         private String samplepcbSiteToken;
 
         public String getToken() {
