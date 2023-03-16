@@ -325,7 +325,9 @@ public class PcbKindService {
                 queryBuilder,
                 highlightBuilder,
                 pageable,
-                null,
+                searchSourceBuilder -> {
+                    searchSourceBuilder.trackTotalHits(true);
+                },
                 request -> request.indices(ElasticIndexName.PCB_KIND)
         );
 

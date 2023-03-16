@@ -160,7 +160,9 @@ public class PcbPartsService {
                 new FunctionScoreQueryBuilder(queryBuilder, CoolElasticUtils.defaultGaussDecayFnBuilder(PcbPartsSearchField.WRITE_DATE)),
                 highlightBuilder,
                 pageable,
-                null,
+                searchSourceBuilder -> {
+                    searchSourceBuilder.trackTotalHits(true);
+                },
                 request -> request.indices(ElasticIndexName.PCB_PARTS)
         );
         List<Map<String, Object>> respData = CoolElasticUtils.getSourceWithHighlightDetailInline(response);

@@ -4,12 +4,15 @@ import coolib.common.CCObjectResult;
 import coolib.common.CCResult;
 import coolib.common.QueryParam;
 import coolib.util.CommonUtils;
+import kr.co.samplepcb.xp.domain.OctopartForSearch;
 import kr.co.samplepcb.xp.domain.PcbItemSearch;
 import kr.co.samplepcb.xp.pojo.ElasticIndexName;
+import kr.co.samplepcb.xp.pojo.OctopartVM;
 import kr.co.samplepcb.xp.pojo.PcbItemSearchVM;
 import kr.co.samplepcb.xp.pojo.adapter.PagingAdapter;
 import kr.co.samplepcb.xp.repository.PcbItemSearchRepository;
 import kr.co.samplepcb.xp.service.common.sub.ExcelSubService;
+import kr.co.samplepcb.xp.service.common.sub.MlOctopartSubService;
 import kr.co.samplepcb.xp.util.CoolElasticUtils;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -50,12 +53,14 @@ public class PcbItemService {
 
     // service
     private final ExcelSubService excelSubService;
+    private final MlOctopartSubService mlOctopartSubService;
 
-    public PcbItemService(RestHighLevelClient restHighLevelClient, PcbItemSearchRepository pcbItemSearchRepository, ElasticsearchRestTemplate elasticsearchRestTemplate, ExcelSubService excelSubService) {
+    public PcbItemService(RestHighLevelClient restHighLevelClient, PcbItemSearchRepository pcbItemSearchRepository, ElasticsearchRestTemplate elasticsearchRestTemplate, ExcelSubService excelSubService, MlOctopartSubService mlOctopartSubService) {
         this.restHighLevelClient = restHighLevelClient;
         this.pcbItemSearchRepository = pcbItemSearchRepository;
         this.elasticsearchRestTemplate = elasticsearchRestTemplate;
         this.excelSubService = excelSubService;
+        this.mlOctopartSubService = mlOctopartSubService;
     }
 
     public void reindexAll() {
@@ -109,6 +114,7 @@ public class PcbItemService {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void excelIndexing(XSSFWorkbook workbook, int sheetAt) {
         XSSFSheet sheet = workbook.getSheetAt(sheetAt); // 해당 엑셀파일의 시트(Sheet) 수
         int rows = sheet.getPhysicalNumberOfRows(); // 해당 시트의 행의 개수
@@ -127,6 +133,23 @@ public class PcbItemService {
             PcbItemSearch findPcbItem = pcbItemSearchMap.get(valueStr);
             if(findPcbItem != null) {
                 continue;
+            }
+
+            if (sheetAt + 1 == 2) { // part number
+                OctopartForSearch octopartForSearch = new OctopartForSearch();
+                octopartForSearch.setMpn(valueStr);
+                CCResult octopartResult = this.mlOctopartSubService.indexing(octopartForSearch);
+                if (octopartResult instanceof CCObjectResult) {
+                    OctopartVM octopartVM = ((CCObjectResult<OctopartVM>) octopartResult).getData();
+                    if (!octopartVM.getExist()) {
+                        log.info("indexing new octopart mpn : {}", octopartVM.getMpn());
+                    }
+                }
+                // octopart 에 존재 하지 않는 상품은 패스
+                if (!octopartResult.isResult()) {
+                    log.info("not exist octopart mpn : {}", valueStr);
+                    continue;
+                }
             }
 
             PcbItemSearch pcbItemSearch = new PcbItemSearch();
@@ -148,12 +171,15 @@ public class PcbItemService {
         HighlightBuilder highlightBuilder = new HighlightBuilder();
         QueryBuilder queryBuilder = this.pcbItemSearchRepository.searchByColumnSearch(pcbColumnSearchVM, queryParam, query, highlightBuilder);
 
+
         SearchResponse response = CoolElasticUtils.search(
                 this.restHighLevelClient,
                 queryBuilder,
                 highlightBuilder,
                 pageable,
-                null,
+                searchSourceBuilder -> {
+                    searchSourceBuilder.trackTotalHits(true);
+                },
                 request -> request.indices(ElasticIndexName.PCB_ITEM)
         );
 

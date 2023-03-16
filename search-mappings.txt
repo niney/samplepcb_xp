@@ -251,3 +251,127 @@ PUT pcbitem
     }
   }
 }
+
+PUT octopart
+{
+  "settings": {
+    "index": {
+      "number_of_shards": "1",
+      "number_of_replicas": "0",
+      "analysis": {
+        "analyzer": {
+          "nori": {
+            "tokenizer": "nori_tokenizer"
+          },
+          "ngram_analyzer": {
+            "tokenizer": "ngram_tokenizer"
+          },
+          "ngram_analyzer_case_insensitive": {
+            "tokenizer": "ngram_tokenizer",
+            "filter": [
+              "lowercase"
+            ]
+          },
+          "ngram_analyzer4_case_insensitive": {
+            "tokenizer": "ngram_tokenizer4",
+            "filter": [
+              "lowercase"
+            ]
+          },
+          "ngram_analyzer6_case_insensitive": {
+            "tokenizer": "ngram_tokenizer6",
+            "filter": [
+              "lowercase"
+            ]
+          }
+        },
+        "tokenizer": {
+          "ngram_tokenizer": {
+            "type": "ngram",
+            "min_gram": 2
+          },
+          "ngram_tokenizer4": {
+            "type": "ngram",
+            "min_gram": 4,
+            "max_gram": 4
+          },
+          "ngram_tokenizer6": {
+            "type": "ngram",
+            "min_gram": 6,
+            "max_gram": 6
+          }
+        },
+        "normalizer": {
+          "keyword_normalizer": {
+            "type": "custom",
+            "filter": [
+              "lowercase"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+
+PUT notoctopart
+{
+  "settings": {
+    "index": {
+      "number_of_shards": "1",
+      "number_of_replicas": "0",
+      "analysis": {
+        "analyzer": {
+          "nori": {
+            "tokenizer": "nori_tokenizer"
+          },
+          "ngram_analyzer": {
+            "tokenizer": "ngram_tokenizer"
+          },
+          "ngram_analyzer_case_insensitive": {
+            "tokenizer": "ngram_tokenizer",
+            "filter": [
+              "lowercase"
+            ]
+          },
+          "ngram_analyzer4_case_insensitive": {
+            "tokenizer": "ngram_tokenizer4",
+            "filter": [
+              "lowercase"
+            ]
+          },
+          "ngram_analyzer6_case_insensitive": {
+            "tokenizer": "ngram_tokenizer6",
+            "filter": [
+              "lowercase"
+            ]
+          }
+        },
+        "tokenizer": {
+          "ngram_tokenizer": {
+            "type": "ngram",
+            "min_gram": 2
+          },
+          "ngram_tokenizer4": {
+            "type": "ngram",
+            "min_gram": 4,
+            "max_gram": 4
+          },
+          "ngram_tokenizer6": {
+            "type": "ngram",
+            "min_gram": 6,
+            "max_gram": 6
+          }
+        },
+        "normalizer": {
+          "keyword_normalizer": {
+            "type": "custom",
+            "filter": [
+              "lowercase"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

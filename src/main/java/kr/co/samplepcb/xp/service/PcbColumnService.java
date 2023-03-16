@@ -157,7 +157,9 @@ public class PcbColumnService {
                 queryBuilder,
                 highlightBuilder,
                 pageable,
-                null,
+                searchSourceBuilder -> {
+                    searchSourceBuilder.trackTotalHits(true);
+                },
                 request -> request.indices(ElasticIndexName.PCB_COLUMN)
         );
 
