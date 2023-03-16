@@ -1,12 +1,12 @@
 package kr.co.samplepcb.xp.service;
 
 import coolib.util.CCDateUtils;
+import kr.co.samplepcb.xp.domain.BomItem;
+import kr.co.samplepcb.xp.pojo.BomQueryParam;
 import kr.co.samplepcb.xp.pojo.PcbItemSearchVM;
 import kr.co.samplepcb.xp.pojo.PcbKindSearchVM;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.view.document.AbstractXlsxView;
 
@@ -25,6 +25,7 @@ public class ExcelDownloadView extends AbstractXlsxView {
     public static final String ALL_KIND_GROUP_BY_TARGET = "allKindGroupByTarget";
     public static final String ALL_KIND_GROUP_BY_TARGET_FOR_CATEGORY = "allKindGroupByTargetForCategory";
     public static final String ALL_PARTS = "allParts";
+    public static final String BOM_ORDER_DETAIL = "bomOrderDetail";
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
@@ -48,6 +49,11 @@ public class ExcelDownloadView extends AbstractXlsxView {
         if(partsListObj != null) {
             List partsList = (List) partsListObj;
             this.makePartsList(partsList, workbook, response);
+        }
+        Object bomOrderDetailObj = model.get(BOM_ORDER_DETAIL);
+        if (bomOrderDetailObj != null) {
+            BomQueryParam bomQueryParam = (BomQueryParam) bomOrderDetailObj;
+            this.makeBomOrderDetailList(bomQueryParam, workbook, response);
         }
     }
 
@@ -149,6 +155,47 @@ public class ExcelDownloadView extends AbstractXlsxView {
             refRow.createCell(column).setCellValue((Integer) map.get(key));
         } else {
             refRow.createCell(column).setCellValue((String) map.get(key));
+        }
+    }
+
+    private void makeBomOrderDetailList(BomQueryParam bomQueryParam, Workbook workbook, HttpServletResponse response) {
+        response.setHeader("Content-Disposition", "attachment; filename=\"bom_order_detail_" + bomQueryParam.getItId() + ".xlsx\"");
+
+        String[] columnNames = {"순번", "품영", "이미지", "최소구매수량", "구매수량", "단가", "합계", "공급사", "발주일", "입고일", "상태"};
+
+        CellStyle titleStyle = workbook.createCellStyle();
+        Font titleFont = workbook.createFont();
+        titleStyle.setAlignment(HorizontalAlignment.CENTER);
+        titleStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+        titleFont.setFontName("돋움");
+        titleFont.setBold(true);
+        titleStyle.setFont(titleFont);
+
+        Sheet sheet = workbook.createSheet("BOM 리스트");
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < columnNames.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(columnNames[i]);
+            cell.setCellStyle(titleStyle);
+        }
+        sheet.setColumnWidth(1, 7000);
+        sheet.setColumnWidth(2, 20000);
+        sheet.setColumnWidth(3, 3000);
+        List<BomItem> bomItemList = bomQueryParam.getBomItemList();
+        for (int i = 0; i < bomItemList.size(); i++) {
+            Row row = sheet.createRow(i + 1);
+            BomItem bomItem = bomItemList.get(i);
+            row.createCell(0).setCellValue(i + 1);
+            row.createCell(1).setCellValue(bomItem.getPartName());
+            row.createCell(2).setCellValue(bomItem.getImageUrl());
+            row.createCell(3).setCellValue(bomItem.getMoq());
+            row.createCell(4).setCellValue(bomItem.getPurchaseStock());
+            row.createCell(5).setCellValue(bomItem.getUnitPrice());
+            row.createCell(6).setCellValue(bomItem.getCalcPrice());
+            row.createCell(7).setCellValue(bomItem.getProviderName());
+            row.createCell(8).setCellValue(bomItem.getOrderDate());
+            row.createCell(9).setCellValue(bomItem.getStockingDate());
+            row.createCell(10).setCellValue(bomItem.getOrderStatus());
         }
     }
 
