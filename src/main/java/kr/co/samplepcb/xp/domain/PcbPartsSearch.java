@@ -114,7 +114,7 @@ public class PcbPartsSearch implements Persistable<String> {
     @Field(type = FieldType.Nested)
     private List<PcbImageVM> images;
     @Field(type = FieldType.Keyword, normalizer = "keyword_normalizer")
-    private String dataCode;
+    private String dateCode;
     @Field(type = FieldType.Keyword, normalizer = "keyword_normalizer")
     private String memberId;
     @MultiField(
@@ -341,12 +341,12 @@ public class PcbPartsSearch implements Persistable<String> {
         this.images = images;
     }
 
-    public String getDataCode() {
-        return dataCode;
+    public String getDateCode() {
+        return dateCode;
     }
 
-    public void setDataCode(String dataCode) {
-        this.dataCode = dataCode;
+    public void setDateCode(String dateCode) {
+        this.dateCode = dateCode;
     }
 
     public String getMemberId() {
