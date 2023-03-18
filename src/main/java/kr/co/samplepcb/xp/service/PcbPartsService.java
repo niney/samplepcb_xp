@@ -7,9 +7,7 @@ import coolib.util.CommonUtils;
 import kr.co.samplepcb.xp.config.ApplicationProperties;
 import kr.co.samplepcb.xp.domain.PcbKindSearch;
 import kr.co.samplepcb.xp.domain.PcbPartsSearch;
-import kr.co.samplepcb.xp.pojo.ElasticIndexName;
-import kr.co.samplepcb.xp.pojo.PcbPartsSearchField;
-import kr.co.samplepcb.xp.pojo.PcbPartsSearchVM;
+import kr.co.samplepcb.xp.pojo.*;
 import kr.co.samplepcb.xp.pojo.adapter.PagingAdapter;
 import kr.co.samplepcb.xp.repository.PcbKindSearchRepository;
 import kr.co.samplepcb.xp.repository.PcbPartsSearchRepository;
@@ -22,7 +20,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -170,33 +167,36 @@ public class PcbPartsService {
         if(!StringUtils.isEmpty(pcbPartsSearchVM.getId()) && respData.size() == 1) {
             Map<String, Object> pcbParts = respData.get(0);
             String memberId = (String) pcbParts.get(PcbPartsSearchField.MEMBER_ID);
-            // id 가 있는경우 담당자정보도 넣어준다
-            RestTemplate restTemplate = new RestTemplate();
-            URI uri = UriComponentsBuilder.newInstance()
-                    .scheme("http").host("samplepcb.co.kr").path("/shop/member_api.php")
-                    .queryParam("w", "mir") // member info read
-                    .queryParam("id", memberId)
-                    .queryParam("token", samplepcbToken)
-                    .build().toUri();
-            CCObjectResult<Map> memberResult = WebClient.create()
-                    .get()
-                    .uri(uri)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<CCObjectResult<Map>>() {}).block();
-            if(memberResult != null && memberResult.getData() != null) {
-                Map member = memberResult.getData();
-                String memberName = (String) member.get("mb_name");
-                String memberTel = (String) member.get("mb_tel");
-                String memberEmail = (String) member.get("mb_email");
-                String managerName = (String) member.get("mb_7");
-                String managerTel = (String) member.get("mb_9");
-                String managerEmail = (String) member.get("mb_15");
-                pcbParts.put(PcbPartsSearchField.CURRENT_MEMBER_NAME, memberName);
-                pcbParts.put(PcbPartsSearchField.CURRENT_MEMBER_PHONE_NUMBER, memberTel);
-                pcbParts.put(PcbPartsSearchField.CURRENT_MEMBER_EMAIL, memberEmail);
-                pcbParts.put(PcbPartsSearchField.CURRENT_MANAGER_NAME, managerName);
-                pcbParts.put(PcbPartsSearchField.CURRENT_MANAGER_PHONE_NUMBER, managerTel);
-                pcbParts.put(PcbPartsSearchField.CURRENT_MANAGER_EMAIL, managerEmail);
+            if (StringUtils.isNotEmpty(memberId)) {
+                // id 가 있는경우 담당자정보도 넣어준다
+                RestTemplate restTemplate = new RestTemplate();
+                URI uri = UriComponentsBuilder.newInstance()
+                        .scheme("http").host("samplepcb.co.kr").path("/shop/member_api.php")
+                        .queryParam("w", "mir") // member info read
+                        .queryParam("id", memberId)
+                        .queryParam("token", samplepcbToken)
+                        .build().toUri();
+                CCObjectResult<Map> memberResult = WebClient.create()
+                        .get()
+                        .uri(uri)
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<CCObjectResult<Map>>() {
+                        }).block();
+                if (memberResult != null && memberResult.getData() != null) {
+                    Map member = memberResult.getData();
+                    String memberName = (String) member.get("mb_name");
+                    String memberTel = (String) member.get("mb_tel");
+                    String memberEmail = (String) member.get("mb_email");
+                    String managerName = (String) member.get("mb_7");
+                    String managerTel = (String) member.get("mb_9");
+                    String managerEmail = (String) member.get("mb_15");
+                    pcbParts.put(PcbPartsSearchField.CURRENT_MEMBER_NAME, memberName);
+                    pcbParts.put(PcbPartsSearchField.CURRENT_MEMBER_PHONE_NUMBER, memberTel);
+                    pcbParts.put(PcbPartsSearchField.CURRENT_MEMBER_EMAIL, memberEmail);
+                    pcbParts.put(PcbPartsSearchField.CURRENT_MANAGER_NAME, managerName);
+                    pcbParts.put(PcbPartsSearchField.CURRENT_MANAGER_PHONE_NUMBER, managerTel);
+                    pcbParts.put(PcbPartsSearchField.CURRENT_MANAGER_EMAIL, managerEmail);
+                }
             }
         }
 
@@ -224,6 +224,28 @@ public class PcbPartsService {
         } finally {
             try {
                 if(workbook != null) {
+                    workbook.close();
+                }
+            } catch (IOException e) {
+                log.error(e.getMessage());
+            }
+        }
+    }
+
+    public void reindexAllByOfferName(MultipartFile file, String offerName) {
+        this.pcbPartsSearchRepository.deleteAllByOfferName(offerName);
+
+        XSSFWorkbook workbook = null;
+        try {
+            workbook = new XSSFWorkbook(file.getInputStream());
+            for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+                excelIndexingByOfferName(workbook, i, offerName);
+            }
+        } catch (Exception e) {
+            log.error(CommonUtils.getFullStackTrace(e));
+        } finally {
+            try {
+                if (workbook != null) {
                     workbook.close();
                 }
             } catch (IOException e) {
@@ -299,6 +321,69 @@ public class PcbPartsService {
         });
 
         if(pcbKindSearchList.size() > 0) {
+            this.pcbKindSearchRepository.saveAll(pcbKindSearchList);
+            log.info("pcb parts items, new kind items indexing");
+        }
+
+        this.pcbPartsSearchRepository.saveAll(pcbPartsSearchList);
+        log.info("pcb parts items indexing");
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    private void excelIndexingByOfferName(XSSFWorkbook workbook, int sheetAt, String offerName) {
+        XSSFSheet sheet = workbook.getSheetAt(sheetAt); // 해당 엑셀파일의 시트(Sheet) 수
+        int rows = sheet.getPhysicalNumberOfRows(); // 해당 시트의 행의 개수
+        List<PcbPartsSearch> pcbPartsSearchList = new ArrayList<>();
+        List<PcbKindSearch> pcbKindSearchList = new ArrayList<>();
+        Map<String, PcbPartsSearch> pcbPartsSearchMap = new HashMap<>();
+        Map<Integer, Map<String, PcbKindSearch>> targetPcbKindSearchMap = new HashMap<>();
+
+        if (rows < 1) {
+            log.info("pcb parts item indexing, data rows={}", rows);
+            return;
+        }
+
+        for (int rowIndex = 1; rowIndex < rows; rowIndex++) {
+            XSSFRow row = sheet.getRow(rowIndex); // 각 행을 읽어온다
+            if (row == null) {
+                continue;
+            }
+
+            // 특수문자 제거하여 저장
+            String valueStr = this.excelSubService.getCellStrValue(row, PcbConstants.SimplePcbParts.PART_NUMBER.ordinal()).trim().replaceAll("[^a-zA-Z0-9]", "");
+
+            PcbPartsSearch findPcbItem = pcbPartsSearchMap.get(valueStr);
+            if (findPcbItem != null) {
+                continue;
+            }
+            String manufacturerName = checkPcbKindExistForCategory(targetPcbKindSearchMap, row, PcbConstants.SimplePcbParts.MANUFACTURER_NAME.ordinal(), PcbPartsSearchField.MANUFACTURER_NAME);
+            String packaging = checkPcbKindExistForCategory(targetPcbKindSearchMap, row, PcbConstants.SimplePcbParts.PACKAGE_DETAIL.ordinal(), PcbPartsSearchField.PACKAGING);
+
+            PcbPartsSearch pcbPartsSearch = new PcbPartsSearch();
+            pcbPartsSearch.setPartName(valueStr);
+            pcbPartsSearch.setDescription(this.excelSubService.getCellStrValue(row, PcbConstants.SimplePcbParts.DESCRIPTION.ordinal()));
+            pcbPartsSearch.setManufacturerName(manufacturerName);
+            pcbPartsSearch.setPackaging(packaging);
+            String qtyStr = this.excelSubService.getCellStrValue(row, PcbConstants.SimplePcbParts.INVENTORY_LEVEL.ordinal())
+                    .replaceAll("[^a-zA-Z0-9가-힣]", ""); // 특수 문자 제거
+            pcbPartsSearch.setInventoryLevel(Integer.parseInt(qtyStr));
+            pcbPartsSearch.setOfferName(offerName);
+            pcbPartsSearch.setStatus(PcbPartsSearchField.Status.APPROVED.ordinal());
+            pcbPartsSearch.setDateCode(this.excelSubService.getCellStrValue(row, PcbConstants.SimplePcbParts.DATE_CODE.ordinal()));
+
+            log.info("pcb parts item prepare indexing : parts name={}", valueStr);
+            pcbPartsSearchList.add(pcbPartsSearch);
+            pcbPartsSearchMap.put(valueStr, pcbPartsSearch);
+        }
+
+
+        targetPcbKindSearchMap.forEach((integer, stringPcbKindSearchMap) -> {
+            stringPcbKindSearchMap.forEach((s, pcbKindSearch) -> {
+                pcbKindSearchList.add(pcbKindSearch);
+            });
+        });
+
+        if (pcbKindSearchList.size() > 0) {
             this.pcbKindSearchRepository.saveAll(pcbKindSearchList);
             log.info("pcb parts items, new kind items indexing");
         }

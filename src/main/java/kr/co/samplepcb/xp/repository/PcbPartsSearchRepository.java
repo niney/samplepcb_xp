@@ -120,4 +120,5 @@ public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPar
         }
         return refQuery;
     }
+    PcbPartsSearch deleteAllByOfferName(String offerName);
 }

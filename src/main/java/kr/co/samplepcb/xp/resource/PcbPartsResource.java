@@ -100,4 +100,10 @@ public class PcbPartsResource {
         return CCResult.ok();
     }
 
+    @PostMapping(value = "/_uploadByOfferName")
+    public CCResult uploadByOfferName(@RequestParam("file") MultipartFile file, String offerName/*, HttpServletRequest request*/) {
+        this.pcbPartsService.reindexAllByOfferName(file, offerName);
+        return CCResult.ok();
+    }
+
 }
