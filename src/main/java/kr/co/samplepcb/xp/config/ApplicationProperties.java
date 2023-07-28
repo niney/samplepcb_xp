@@ -54,8 +54,11 @@ public class ApplicationProperties {
     }
 
     public static class Auth {
-        private String token = "7025cd62f74111eb9a030242ac130003";
+        private String token = "";
         private String samplepcbSiteToken;
+        private String alimtalkIWinvUrl;
+        private String alimtalkIWinvToken;
+        private String alimtalkIWinvResendCallback;
 
         public String getToken() {
             return token;
@@ -71,6 +74,30 @@ public class ApplicationProperties {
 
         public void setSamplepcbSiteToken(String samplepcbSiteToken) {
             this.samplepcbSiteToken = samplepcbSiteToken;
+        }
+
+        public String getAlimtalkIWinvUrl() {
+            return alimtalkIWinvUrl;
+        }
+
+        public void setAlimtalkIWinvUrl(String alimtalkIWinvUrl) {
+            this.alimtalkIWinvUrl = alimtalkIWinvUrl;
+        }
+
+        public String getAlimtalkIWinvToken() {
+            return alimtalkIWinvToken;
+        }
+
+        public void setAlimtalkIWinvToken(String alimtalkIWinvToken) {
+            this.alimtalkIWinvToken = alimtalkIWinvToken;
+        }
+
+        public String getAlimtalkIWinvResendCallback() {
+            return alimtalkIWinvResendCallback;
+        }
+
+        public void setAlimtalkIWinvResendCallback(String alimtalkIWinvResendCallback) {
+            this.alimtalkIWinvResendCallback = alimtalkIWinvResendCallback;
         }
     }
 
