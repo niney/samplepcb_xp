@@ -141,6 +141,57 @@ public class PcbPartsSearch implements Persistable<String> {
     @Field(type = FieldType.Text, analyzer = "nori")
     private String contents;
     private Integer status;
+    @Field(type = FieldType.Object)
+    private PcbUnitSearch watt;
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "samplepcb_analyzer", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword),
+                    @InnerField(suffix = "ngram", type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true)
+            }
+    )
+    private String tolerance;
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "samplepcb_analyzer", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword),
+                    @InnerField(suffix = "ngram", type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true)
+            }
+    )
+    private String ohm;
+    @Field(type = FieldType.Object)
+    private PcbUnitSearch condenser;
+    @Field(type = FieldType.Object)
+    private PcbUnitSearch voltage;
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "samplepcb_analyzer", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword),
+                    @InnerField(suffix = "ngram", type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true)
+            }
+    )
+    private String temperature;
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "samplepcb_analyzer", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword),
+                    @InnerField(suffix = "ngram", type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true)
+            }
+    )
+    private String size;
+    @Field(type = FieldType.Object)
+    private PcbUnitSearch current;
+    @Field(type = FieldType.Object)
+    private PcbUnitSearch inductor;
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true),
+            otherFields = {
+                    @InnerField(suffix = "keyword", type = FieldType.Keyword),
+                    @InnerField(suffix = "samplepcb", type = FieldType.Text, analyzer = "samplepcb_analyzer", fielddata = true)
+            }
+    )
+    private String productName;
+
     @Field(type = FieldType.Nested)
     private List<PcbPartSpec> specs;
 
@@ -395,6 +446,86 @@ public class PcbPartsSearch implements Persistable<String> {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public PcbUnitSearch getWatt() {
+        return watt;
+    }
+
+    public void setWatt(PcbUnitSearch watt) {
+        this.watt = watt;
+    }
+
+    public String getTolerance() {
+        return tolerance;
+    }
+
+    public void setTolerance(String tolerance) {
+        this.tolerance = tolerance;
+    }
+
+    public String getOhm() {
+        return ohm;
+    }
+
+    public void setOhm(String ohm) {
+        this.ohm = ohm;
+    }
+
+    public PcbUnitSearch getCondenser() {
+        return condenser;
+    }
+
+    public void setCondenser(PcbUnitSearch condenser) {
+        this.condenser = condenser;
+    }
+
+    public PcbUnitSearch getVoltage() {
+        return voltage;
+    }
+
+    public void setVoltage(PcbUnitSearch voltage) {
+        this.voltage = voltage;
+    }
+
+    public String getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(String temperature) {
+        this.temperature = temperature;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    public PcbUnitSearch getCurrent() {
+        return current;
+    }
+
+    public void setCurrent(PcbUnitSearch current) {
+        this.current = current;
+    }
+
+    public PcbUnitSearch getInductor() {
+        return inductor;
+    }
+
+    public void setInductor(PcbUnitSearch inductor) {
+        this.inductor = inductor;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 
     public List<PcbPartSpec> getSpecs() {

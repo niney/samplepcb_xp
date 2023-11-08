@@ -1,5 +1,8 @@
 package kr.co.samplepcb.xp.pojo;
 
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
@@ -50,6 +53,16 @@ public class PcbPartsSearchVM {
     private String managerName;
     private String managerEmail;
     private Integer status;
+    private String watt;
+    private String tolerance;
+    private String ohm;
+    private String condenser;
+    private String voltage;
+    private String temperature;
+    private String size;
+    private String current;
+    private String inductor;
+    private String productName;
     private List<Integer> statusList;
     private String contents;
     private String token;
@@ -305,6 +318,86 @@ public class PcbPartsSearchVM {
 
     public void setStatusList(List<Integer> statusList) {
         this.statusList = statusList;
+    }
+
+    public String getWatt() {
+        return watt;
+    }
+
+    public void setWatt(String watt) {
+        this.watt = watt;
+    }
+
+    public String getTolerance() {
+        return tolerance;
+    }
+
+    public void setTolerance(String tolerance) {
+        this.tolerance = tolerance;
+    }
+
+    public String getOhm() {
+        return ohm;
+    }
+
+    public void setOhm(String ohm) {
+        this.ohm = ohm;
+    }
+
+    public String getCondenser() {
+        return condenser;
+    }
+
+    public void setCondenser(String condenser) {
+        this.condenser = condenser;
+    }
+
+    public String getVoltage() {
+        return voltage;
+    }
+
+    public void setVoltage(String voltage) {
+        this.voltage = voltage;
+    }
+
+    public String getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(String temperature) {
+        this.temperature = temperature;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    public String getCurrent() {
+        return current;
+    }
+
+    public void setCurrent(String current) {
+        this.current = current;
+    }
+
+    public String getInductor() {
+        return inductor;
+    }
+
+    public void setInductor(String inductor) {
+        this.inductor = inductor;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 
     public String getToken() {

@@ -45,7 +45,7 @@ public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPar
 
 
     default QueryBuilder makeWildcardPermitFieldQuery(String qf, String query, BoolQueryBuilder refQuery) {
-        if (StringUtils.isNotEmpty(qf)) {
+        if (StringUtils.isNotEmpty(qf) && !qf.equals("parsing")) {
             return refQuery.must(matchQuery(qf, query));
         }
         return refQuery
@@ -55,6 +55,16 @@ public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPar
                         .field(PcbPartsSearchField.LARGE_CATEGORY)
                         .field(PcbPartsSearchField.MEDIUM_CATEGORY)
                         .field(PcbPartsSearchField.SMALL_CATEGORY)
+                        .field(PcbPartsSearchField.WATT)
+                        .field(PcbPartsSearchField.TOLERANCE)
+                        .field(PcbPartsSearchField.OHM)
+                        .field(PcbPartsSearchField.CONDENSER)
+                        .field(PcbPartsSearchField.VOLTAGE)
+                        .field(PcbPartsSearchField.TEMPERATURE)
+                        .field(PcbPartsSearchField.SIZE)
+                        .field(PcbPartsSearchField.CURRENT)
+                        .field(PcbPartsSearchField.INDUCTOR)
+                        .field(PcbPartsSearchField.PRODUCT_NAME)
                 );
     }
 
@@ -64,6 +74,16 @@ public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPar
         highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.LARGE_CATEGORY));
         highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.MEDIUM_CATEGORY));
         highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.SMALL_CATEGORY));
+        highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.WATT));
+        highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.TOLERANCE));
+        highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.OHM));
+        highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.CONDENSER));
+        highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.VOLTAGE));
+        highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.TEMPERATURE));
+        highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.SIZE));
+        highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.CURRENT));
+        highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.INDUCTOR));
+        highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.PRODUCT_NAME));
         return this.makeWildcardPermitFieldQuery(qf, query, refQuery);
     }
 
@@ -84,6 +104,7 @@ public interface PcbPartsSearchRepository extends ElasticsearchRepository<PcbPar
                             name.equals(PcbPartsSearchField.SERVICE_TYPE)) {
                         categoryQuery.should(QueryBuilders.matchQuery(name, value));
                         continue;
+
                     }
                     if(name.equals("id")) {
                         name = "_id";

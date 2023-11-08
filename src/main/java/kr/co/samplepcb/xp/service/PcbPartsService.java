@@ -7,12 +7,15 @@ import coolib.util.CommonUtils;
 import kr.co.samplepcb.xp.config.ApplicationProperties;
 import kr.co.samplepcb.xp.domain.PcbKindSearch;
 import kr.co.samplepcb.xp.domain.PcbPartsSearch;
+import kr.co.samplepcb.xp.domain.PcbUnitSearch;
 import kr.co.samplepcb.xp.pojo.*;
 import kr.co.samplepcb.xp.pojo.adapter.PagingAdapter;
 import kr.co.samplepcb.xp.repository.PcbKindSearchRepository;
 import kr.co.samplepcb.xp.repository.PcbPartsSearchRepository;
+import kr.co.samplepcb.xp.service.common.sub.DataExtractorSubService;
 import kr.co.samplepcb.xp.service.common.sub.ExcelSubService;
 import kr.co.samplepcb.xp.util.CoolElasticUtils;
+import kr.co.samplepcb.xp.util.PcbPartsUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -57,14 +60,17 @@ public class PcbPartsService {
     // prop
     private final ApplicationProperties applicationProperties;
     private final String samplepcbToken;
+    private final DataExtractorSubService dataExtractorSubService;
 
-    public PcbPartsService(RestHighLevelClient restHighLevelClient, PcbPartsSearchRepository pcbPartsSearchRepository, PcbKindSearchRepository pcbKindSearchRepository, ExcelSubService excelSubService, ApplicationProperties applicationProperties) {
+    public PcbPartsService(RestHighLevelClient restHighLevelClient, PcbPartsSearchRepository pcbPartsSearchRepository, PcbKindSearchRepository pcbKindSearchRepository, ExcelSubService excelSubService, DataExtractorSubService dataExtractorSubService, ApplicationProperties applicationProperties) {
         this.restHighLevelClient = restHighLevelClient;
         this.pcbPartsSearchRepository = pcbPartsSearchRepository;
         this.pcbKindSearchRepository = pcbKindSearchRepository;
         this.excelSubService = excelSubService;
+        this.dataExtractorSubService = dataExtractorSubService;
         this.applicationProperties = applicationProperties;
         this.samplepcbToken = applicationProperties.getAuth().getSamplepcbSiteToken();
+
     }
 
     public CCResult indexing(PcbPartsSearchVM pcbPartsSearchVM) {
@@ -131,10 +137,66 @@ public class PcbPartsService {
         BoolQueryBuilder query = boolQuery();
         HighlightBuilder highlightBuilder = new HighlightBuilder();
         BoolQueryBuilder queryBuilder;
-        if(StringUtils.isNotEmpty(queryParam.getQ())) {
+        if(StringUtils.isNotEmpty(queryParam.getQ()) && !queryParam.getQf().equals("parsing")) {
             this.pcbPartsSearchRepository.makeWildcardPermitFieldQuery(queryParam.getQf(), queryParam.getQ(), query, highlightBuilder);
         }
         queryBuilder = this.pcbPartsSearchRepository.searchByColumnSearch(pcbPartsSearchVM, queryParam, query, highlightBuilder);
+
+        // parsing
+        if (StringUtils.isNotEmpty(queryParam.getQf()) && queryParam.getQf().equals("parsing")) {
+            boolean hasSize = false;
+            BoolQueryBuilder shouldQuery = boolQuery();
+            Map<String, List<String>> parsedKeywords = PcbPartsUtils.parseString(queryParam.getQ());
+            parsedKeywords.forEach((k, v) -> {
+                if (k.equals(PcbPartsSearchField.WATT)) {
+                    for (String pcb : PcbPartsSearchField.WATT_LIST) {
+                        for (String keyword : v) {
+                            shouldQuery.should(matchQuery(pcb, keyword));
+                            highlightBuilder.field(new HighlightBuilder.Field(pcb));
+                        }
+                    }
+                } else if (k.equals(PcbPartsSearchField.CONDENSER)) {
+                    for (String pcb : PcbPartsSearchField.CONDENSER_List) {
+                        for (String keyword : v) {
+                            shouldQuery.should(matchQuery(pcb, keyword));
+                            highlightBuilder.field(new HighlightBuilder.Field(pcb));
+                        }
+                    }
+                } else if (k.equals(PcbPartsSearchField.VOLTAGE)) {
+                    for (String pcb : PcbPartsSearchField.VOLTAGE_LIST) {
+                        for (String keyword : v) {
+                            shouldQuery.should(matchQuery(pcb, keyword));
+                            highlightBuilder.field(new HighlightBuilder.Field(pcb));
+                        }
+                    }
+                } else if (k.equals(PcbPartsSearchField.CURRENT)) {
+                    for (String pcb : PcbPartsSearchField.CURRENT_LIST) {
+                        for (String keyword : v) {
+                            shouldQuery.should(matchQuery(pcb, keyword));
+                            highlightBuilder.field(new HighlightBuilder.Field(pcb));
+                        }
+                    }
+                } else if (k.equals(PcbPartsSearchField.INDUCTOR)) {
+                    for (String pcb : PcbPartsSearchField.INDUCTOR_LIST) {
+                        for (String keyword : v) {
+                            shouldQuery.should(matchQuery(pcb, keyword));
+                            highlightBuilder.field(new HighlightBuilder.Field(pcb));
+                        }
+                    }
+                } else {
+                    for (String keyword : v) {
+                        shouldQuery.should(matchQuery(k, keyword));
+                        highlightBuilder.field(new HighlightBuilder.Field(k));
+                    }
+                }
+            });
+            // size
+            String extractedSize = this.dataExtractorSubService.extractSizeFromTitle(queryParam.getQ());
+            if (parsedKeywords.get(PcbPartsSearchField.SIZE) == null && StringUtils.isNotEmpty(extractedSize)) {
+                shouldQuery.should(matchQuery(PcbPartsSearchField.SIZE, extractedSize));
+            }
+            queryBuilder.must(shouldQuery);
+        }
 
         // 상태
         List<Integer> statusList;
@@ -154,7 +216,8 @@ public class PcbPartsService {
 
         SearchResponse response = CoolElasticUtils.search(
                 this.restHighLevelClient,
-                new FunctionScoreQueryBuilder(queryBuilder, CoolElasticUtils.defaultGaussDecayFnBuilder(PcbPartsSearchField.WRITE_DATE)),
+                pageable.getSort().getOrderFor(PcbPartsSearchField.WRITE_DATE) == null
+                        ? queryBuilder : new FunctionScoreQueryBuilder(queryBuilder, CoolElasticUtils.defaultGaussDecayFnBuilder(PcbPartsSearchField.WRITE_DATE)),
                 highlightBuilder,
                 pageable,
                 searchSourceBuilder -> {
@@ -484,6 +547,155 @@ public class PcbPartsService {
                     }
                     pcbKindSearchMap.put(value, newKindSearch);
                 }
+            }
+        }
+    }
+
+    private void excelIndexingByEleparts(XSSFWorkbook workbook, int sheetAt) {
+        XSSFSheet sheet = workbook.getSheetAt(sheetAt); // 해당 엑셀파일의 시트(Sheet) 수
+        int rows = sheet.getPhysicalNumberOfRows(); // 해당 시트의 행의 개수
+        List<PcbPartsSearch> pcbPartsSearchList = new ArrayList<>();
+        List<PcbKindSearch> pcbKindSearchList = new ArrayList<>();
+        Map<String, PcbPartsSearch> pcbPartsSearchMap = new HashMap<>();
+        Map<Integer, Map<String, PcbKindSearch>> targetPcbKindSearchMap = new HashMap<>();
+
+        if (rows < 1) {
+            log.info("pcb parts item indexing, data rows={}", rows);
+            return;
+        }
+
+        for (int rowIndex = 1; rowIndex < rows; rowIndex++) {
+            XSSFRow row = sheet.getRow(rowIndex); // 각 행을 읽어온다
+            if (row == null) {
+                continue;
+            }
+
+            // 특수문자 제거하여 저장
+            String valueStr = this.excelSubService.getCellStrValue(row, 11).trim().replaceAll("[^a-zA-Z0-9]", "");
+
+            PcbPartsSearch findPcbItem = pcbPartsSearchMap.get(valueStr);
+            if (findPcbItem != null) {
+                continue;
+            }
+//            String largeCategory = checkPcbKindExistForCategory(row, 1, PcbPartsSearchField.LARGE_CATEGORY);
+//            String mediumCategory = checkPcbKindExistForCategory(row, 2, PcbPartsSearchField.MEDIUM_CATEGORY);
+//            String smallCategory = checkPcbKindExistForCategory(row, 3, PcbPartsSearchField.SMALL_CATEGORY);
+            String manufacturerName = checkPcbKindExistForCategory(targetPcbKindSearchMap, row, 12, PcbPartsSearchField.MANUFACTURER_NAME);
+            String packaging = checkPcbKindExistForCategory(targetPcbKindSearchMap, row, 8, PcbPartsSearchField.PACKAGING);
+//            String offerName = checkPcbKindExistForCategory(targetPcbKindSearchMap, row, 17, PcbPartsSearchField.OFFER_NAME);
+
+            PcbPartsSearch pcbPartsSearch = new PcbPartsSearch();
+//            pcbPartsSearch.setLargeCategory(largeCategory);
+//            pcbPartsSearch.setMediumCategory(mediumCategory);
+//            pcbPartsSearch.setSmallCategory(smallCategory);
+            pcbPartsSearch.setPartName(this.excelSubService.getCellStrValue(row, 11));
+            pcbPartsSearch.setDescription(this.excelSubService.getCellStrValue(row, 1));
+            pcbPartsSearch.setManufacturerName(manufacturerName);
+//            pcbPartsSearch.setPartsPackaging(this.excelSubService.getCellStrValue(row, 7));
+            pcbPartsSearch.setPackaging(packaging);
+//            pcbPartsSearch.setMoq(this.excelSubService.getCellNumberValue(row, 9).intValue());
+            pcbPartsSearch.setPrice1(toPrice(row, 13));
+            pcbPartsSearch.setPrice2(toPrice(row, 13));
+            pcbPartsSearch.setPrice3(toPrice(row, 13));
+            pcbPartsSearch.setPrice4(toPrice(row, 13));
+            pcbPartsSearch.setPrice5(toPrice(row, 13));
+//            pcbPartsSearch.setInventoryLevel(this.excelSubService.getCellNumberValue(row, 15).intValue());
+//            pcbPartsSearch.setMemo(this.excelSubService.getCellStrValue(row, 16));
+//            pcbPartsSearch.setOfferName(offerName);
+//            pcbPartsSearch.setMemberId(this.excelSubService.getCellStrValue(row, 18));
+            pcbPartsSearch.setStatus(PcbPartsSearchField.Status.APPROVED.ordinal());
+
+            // watt
+            pcbPartsSearch.setWatt(this.parsingToPcbUnitSearch(PcbPartsSearchField.WATT, this.excelSubService.getCellStrValue(row, 2)));
+            // tolerance
+            pcbPartsSearch.setTolerance(this.excelSubService.getCellStrValue(row, 3));
+            // ohm
+            pcbPartsSearch.setOhm(this.excelSubService.getCellStrValue(row, 4));
+            // condenser
+            pcbPartsSearch.setCondenser(this.parsingToPcbUnitSearch(PcbPartsSearchField.CONDENSER, this.excelSubService.getCellStrValue(row, 5)));
+            // voltage
+            pcbPartsSearch.setVoltage(this.parsingToPcbUnitSearch(PcbPartsSearchField.VOLTAGE, this.excelSubService.getCellStrValue(row, 6)));
+            // temperature
+            pcbPartsSearch.setTemperature(this.excelSubService.getCellStrValue(row, 7));
+            // size
+            pcbPartsSearch.setSize(this.excelSubService.getCellStrValue(row, 8));
+            // current
+            pcbPartsSearch.setCurrent(this.parsingToPcbUnitSearch(PcbPartsSearchField.CURRENT, this.excelSubService.getCellStrValue(row, 9)));
+            // inductor
+            pcbPartsSearch.setInductor(this.parsingToPcbUnitSearch(PcbPartsSearchField.INDUCTOR, this.excelSubService.getCellStrValue(row, 10)));
+
+            log.info("pcb parts item prepare indexing : parts name={}", valueStr);
+            pcbPartsSearchList.add(pcbPartsSearch);
+            pcbPartsSearchMap.put(valueStr, pcbPartsSearch);
+        }
+
+
+        targetPcbKindSearchMap.forEach((integer, stringPcbKindSearchMap) -> {
+            stringPcbKindSearchMap.forEach((s, pcbKindSearch) -> {
+                pcbKindSearchList.add(pcbKindSearch);
+            });
+        });
+
+        if (pcbKindSearchList.size() > 0) {
+            this.pcbKindSearchRepository.saveAll(pcbKindSearchList);
+            log.info("pcb parts items, new kind items indexing");
+        }
+
+        this.pcbPartsSearchRepository.saveAll(pcbPartsSearchList);
+        log.info("pcb parts items indexing");
+    }
+
+    private PcbUnitSearch parsingToPcbUnitSearch(String propertyName, String value) {
+        PcbUnitSearch pcbUnitSearch = new PcbUnitSearch();
+        List<String> parsedSearchResults = PcbPartsUtils.parseString(value).get(propertyName);
+        if (parsedSearchResults != null) {
+            for (String searchValue : parsedSearchResults) {
+                // 소문자로 변환
+                String lowerCaseString = searchValue.toLowerCase();
+                // μF와 µF를 uF로 대체
+                String replacedString = lowerCaseString
+                        .replace("μF", "uF")
+                        .replace("µF", "uF")
+                        .replace("uf", "uF");
+                Map<PcbPartsUtils.FaradsUnit, String> faradsMap = PcbPartsUtils.convertToFarads(replacedString);
+                pcbUnitSearch.setField1(faradsMap.get(PcbPartsUtils.FaradsUnit.FARADS));
+                pcbUnitSearch.setField2(faradsMap.get(PcbPartsUtils.FaradsUnit.MICROFARADS));
+                pcbUnitSearch.setField3(faradsMap.get(PcbPartsUtils.FaradsUnit.NANOFARADS));
+                pcbUnitSearch.setField4(faradsMap.get(PcbPartsUtils.FaradsUnit.PICOFARADS));
+            }
+        }
+        return pcbUnitSearch;
+    }
+
+    private int toPrice(XSSFRow row, int index) {
+        String cellStrValue = this.excelSubService.getCellStrValue(row, index);
+        // 숫자와 소수점을 제외한 모든 문자 제거
+        String numericString = cellStrValue.replaceAll("[^\\d.]", "");
+        if(StringUtils.isEmpty(numericString)) {
+            return 0;
+        }
+        // 문자열을 double 형으로 변환
+        // 반올림 수행
+        return (int) Math.round(Double.parseDouble(numericString));
+    }
+
+    public void indexAllByEleparts(MultipartFile file) {
+        this.pcbPartsSearchRepository.deleteAll();
+        XSSFWorkbook workbook = null;
+        try {
+            workbook = new XSSFWorkbook(file.getInputStream());
+            for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+                excelIndexingByEleparts(workbook, i);
+            }
+        } catch (Exception e) {
+            log.error(CommonUtils.getFullStackTrace(e));
+        } finally {
+            try {
+                if (workbook != null) {
+                    workbook.close();
+                }
+            } catch (IOException e) {
+                log.error(e.getMessage());
             }
         }
     }

@@ -113,6 +113,12 @@ PUT pcbparts
             "filter": [
               "lowercase"
             ]
+          },
+          "samplepcb_analyzer": {
+            "tokenizer": "samplepcb_number_tokenizer",
+            "filter": [
+              "lowercase"
+            ]
           }
         },
         "tokenizer": {

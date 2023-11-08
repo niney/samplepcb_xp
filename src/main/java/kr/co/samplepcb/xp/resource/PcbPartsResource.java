@@ -106,4 +106,10 @@ public class PcbPartsResource {
         return CCResult.ok();
     }
 
+    @PostMapping(value = "/_uploadItemFileByEleparts")
+    public CCResult uploadItemFileByEleparts(@RequestParam("file") MultipartFile file/*, HttpServletRequest request*/) {
+        this.pcbPartsService.indexAllByEleparts(file);
+        return CCResult.ok();
+    }
+
 }
