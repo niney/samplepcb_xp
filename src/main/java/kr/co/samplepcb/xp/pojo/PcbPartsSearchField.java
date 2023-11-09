@@ -82,7 +82,7 @@ public class PcbPartsSearchField {
     public static final String CONDENSER_FIELD3 = "condenser.field3";
     public static final String CONDENSER_FIELD4 = "condenser.field4";
     public static final String CONDENSER_FIELD5 = "condenser.field5";
-    public static final List<String> CONDENSER_List = Arrays.asList(CONDENSER_FIELD1, CONDENSER_FIELD2, CONDENSER_FIELD3, CONDENSER_FIELD4, CONDENSER_FIELD5);
+    public static final List<String> CONDENSER_LIST = Arrays.asList(CONDENSER_FIELD1, CONDENSER_FIELD2, CONDENSER_FIELD3, CONDENSER_FIELD4, CONDENSER_FIELD5);
     public static final String VOLTAGE = "voltage";
     public static final String VOLTAGE_FIELD1 = "voltage.field1";
     public static final String VOLTAGE_FIELD2 = "voltage.field2";

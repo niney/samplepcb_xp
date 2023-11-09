@@ -147,54 +147,54 @@ public class PcbPartsService {
         if (StringUtils.isNotEmpty(queryParam.getQf()) && queryParam.getQf().equals("parsing")) {
             boolean hasSize = false;
             BoolQueryBuilder shouldQuery = boolQuery();
+            String q = queryParam.getQ();
+            shouldQuery.should(matchQuery(PcbPartsSearchField.PART_NAME, q));
+            highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.PART_NAME));
             Map<String, List<String>> parsedKeywords = PcbPartsUtils.parseString(queryParam.getQ());
             parsedKeywords.forEach((k, v) -> {
-                if (k.equals(PcbPartsSearchField.WATT)) {
-                    for (String pcb : PcbPartsSearchField.WATT_LIST) {
-                        for (String keyword : v) {
-                            shouldQuery.should(matchQuery(pcb, keyword));
+                String keywords = String.join(" ", v);
+                switch (k) {
+                    case PcbPartsSearchField.WATT:
+                        for (String pcb : PcbPartsSearchField.WATT_LIST) {
+                            shouldQuery.should(matchQuery(pcb, keywords));
                             highlightBuilder.field(new HighlightBuilder.Field(pcb));
                         }
-                    }
-                } else if (k.equals(PcbPartsSearchField.CONDENSER)) {
-                    for (String pcb : PcbPartsSearchField.CONDENSER_List) {
-                        for (String keyword : v) {
-                            shouldQuery.should(matchQuery(pcb, keyword));
+                        break;
+                    case PcbPartsSearchField.CONDENSER:
+                        for (String pcb : PcbPartsSearchField.CONDENSER_LIST) {
+                            shouldQuery.should(matchQuery(pcb, keywords));
                             highlightBuilder.field(new HighlightBuilder.Field(pcb));
                         }
-                    }
-                } else if (k.equals(PcbPartsSearchField.VOLTAGE)) {
-                    for (String pcb : PcbPartsSearchField.VOLTAGE_LIST) {
-                        for (String keyword : v) {
-                            shouldQuery.should(matchQuery(pcb, keyword));
+                        break;
+                    case PcbPartsSearchField.VOLTAGE:
+                        for (String pcb : PcbPartsSearchField.VOLTAGE_LIST) {
+                            shouldQuery.should(matchQuery(pcb, keywords));
                             highlightBuilder.field(new HighlightBuilder.Field(pcb));
                         }
-                    }
-                } else if (k.equals(PcbPartsSearchField.CURRENT)) {
-                    for (String pcb : PcbPartsSearchField.CURRENT_LIST) {
-                        for (String keyword : v) {
-                            shouldQuery.should(matchQuery(pcb, keyword));
+                        break;
+                    case PcbPartsSearchField.CURRENT:
+                        for (String pcb : PcbPartsSearchField.CURRENT_LIST) {
+                            shouldQuery.should(matchQuery(pcb, keywords));
                             highlightBuilder.field(new HighlightBuilder.Field(pcb));
                         }
-                    }
-                } else if (k.equals(PcbPartsSearchField.INDUCTOR)) {
-                    for (String pcb : PcbPartsSearchField.INDUCTOR_LIST) {
-                        for (String keyword : v) {
-                            shouldQuery.should(matchQuery(pcb, keyword));
+                        break;
+                    case PcbPartsSearchField.INDUCTOR:
+                        for (String pcb : PcbPartsSearchField.INDUCTOR_LIST) {
+                            shouldQuery.should(matchQuery(pcb, keywords));
                             highlightBuilder.field(new HighlightBuilder.Field(pcb));
                         }
-                    }
-                } else {
-                    for (String keyword : v) {
-                        shouldQuery.should(matchQuery(k, keyword));
+                        break;
+                    default:
+                        shouldQuery.should(matchQuery(k, keywords));
                         highlightBuilder.field(new HighlightBuilder.Field(k));
-                    }
+                        break;
                 }
             });
             // size
             String extractedSize = this.dataExtractorSubService.extractSizeFromTitle(queryParam.getQ());
             if (parsedKeywords.get(PcbPartsSearchField.SIZE) == null && StringUtils.isNotEmpty(extractedSize)) {
                 shouldQuery.should(matchQuery(PcbPartsSearchField.SIZE, extractedSize));
+                highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.SIZE));
             }
             queryBuilder.must(shouldQuery);
         }
@@ -713,7 +713,7 @@ public class PcbPartsService {
     }
 
     public void indexAllByEleparts(MultipartFile file) {
-        this.pcbPartsSearchRepository.deleteAll();
+//        this.pcbPartsSearchRepository.deleteAll();
         XSSFWorkbook workbook = null;
         try {
             workbook = new XSSFWorkbook(file.getInputStream());
