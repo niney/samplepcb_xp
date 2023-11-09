@@ -16,6 +16,7 @@ import kr.co.samplepcb.xp.service.common.sub.DataExtractorSubService;
 import kr.co.samplepcb.xp.service.common.sub.ExcelSubService;
 import kr.co.samplepcb.xp.util.CoolElasticUtils;
 import kr.co.samplepcb.xp.util.PcbPartsUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -648,20 +649,52 @@ public class PcbPartsService {
     private PcbUnitSearch parsingToPcbUnitSearch(String propertyName, String value) {
         PcbUnitSearch pcbUnitSearch = new PcbUnitSearch();
         List<String> parsedSearchResults = PcbPartsUtils.parseString(value).get(propertyName);
-        if (parsedSearchResults != null) {
-            for (String searchValue : parsedSearchResults) {
+        if (CollectionUtils.isNotEmpty(parsedSearchResults)) {
+            String searchValue = parsedSearchResults.get(0);
+            String lowerCaseString = searchValue.toLowerCase();
+            // μF와 µF를 uF로 대체
+            String replacedString = lowerCaseString
+                    .replace("μF", "uF")
+                    .replace("µF", "uF")
+                    .replace("uf", "uF")
+                    .replace("μV", "uV")
+                    .replace("µV", "uV")
+                    .replace("uv", "uV")
+                    .replace("μA", "uA")
+                    .replace("µA", "uA")
+                    .replace("ua", "uA");
+            if (propertyName.equals(PcbPartsSearchField.CONDENSER)) {
                 // 소문자로 변환
-                String lowerCaseString = searchValue.toLowerCase();
-                // μF와 µF를 uF로 대체
-                String replacedString = lowerCaseString
-                        .replace("μF", "uF")
-                        .replace("µF", "uF")
-                        .replace("uf", "uF");
-                Map<PcbPartsUtils.FaradsUnit, String> faradsMap = PcbPartsUtils.convertToFarads(replacedString);
-                pcbUnitSearch.setField1(faradsMap.get(PcbPartsUtils.FaradsUnit.FARADS));
-                pcbUnitSearch.setField2(faradsMap.get(PcbPartsUtils.FaradsUnit.MICROFARADS));
-                pcbUnitSearch.setField3(faradsMap.get(PcbPartsUtils.FaradsUnit.NANOFARADS));
-                pcbUnitSearch.setField4(faradsMap.get(PcbPartsUtils.FaradsUnit.PICOFARADS));
+                PcbPartsUtils.FaradsConvert faradsConvert = new PcbPartsUtils.FaradsConvert();
+                Map<PcbPartsUtils.FaradsConvert.Unit, String> faradsMap = faradsConvert.convert(replacedString);
+                pcbUnitSearch.setField1(faradsMap.get(PcbPartsUtils.PcbConvert.Unit.FARADS));
+                pcbUnitSearch.setField2(faradsMap.get(PcbPartsUtils.PcbConvert.Unit.MICROFARADS));
+                pcbUnitSearch.setField3(faradsMap.get(PcbPartsUtils.PcbConvert.Unit.NANOFARADS));
+                pcbUnitSearch.setField4(faradsMap.get(PcbPartsUtils.PcbConvert.Unit.PICOFARADS));
+            }
+
+            if (propertyName.equals(PcbPartsSearchField.TOLERANCE)) {
+                PcbPartsUtils.ToleranceConvert toleranceConvert = new PcbPartsUtils.ToleranceConvert();
+                Map<PcbPartsUtils.PcbConvert.Unit, String> tolerance = toleranceConvert.convert(replacedString);
+                pcbUnitSearch.setField1(tolerance.get(PcbPartsUtils.PcbConvert.Unit.PERCENT));
+                pcbUnitSearch.setField2(tolerance.get(PcbPartsUtils.PcbConvert.Unit.PERCENT_STRING));
+            }
+
+            if (propertyName.equals(PcbPartsSearchField.VOLTAGE)) {
+                PcbPartsUtils.VoltConvert voltageConvert = new PcbPartsUtils.VoltConvert();
+                Map<PcbPartsUtils.PcbConvert.Unit, String> voltage = voltageConvert.convert(replacedString);
+                pcbUnitSearch.setField1(voltage.get(PcbPartsUtils.PcbConvert.Unit.VOLTS));
+                pcbUnitSearch.setField2(voltage.get(PcbPartsUtils.PcbConvert.Unit.KILOVOLTS));
+                pcbUnitSearch.setField3(voltage.get(PcbPartsUtils.PcbConvert.Unit.MILLIVOLTS));
+                pcbUnitSearch.setField4(voltage.get(PcbPartsUtils.PcbConvert.Unit.MICROVOLTS));
+            }
+
+            if (propertyName.equals(PcbPartsSearchField.CURRENT)) {
+                PcbPartsUtils.CurrentConvert currentConvert = new PcbPartsUtils.CurrentConvert();
+                Map<PcbPartsUtils.PcbConvert.Unit, String> current = currentConvert.convert(replacedString);
+                pcbUnitSearch.setField1(current.get(PcbPartsUtils.PcbConvert.Unit.AMPERES));
+                pcbUnitSearch.setField2(current.get(PcbPartsUtils.PcbConvert.Unit.MILLIAMPERES));
+                pcbUnitSearch.setField3(current.get(PcbPartsUtils.PcbConvert.Unit.MICROAMPERES));
             }
         }
         return pcbUnitSearch;
