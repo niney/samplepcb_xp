@@ -160,6 +160,18 @@ public class PcbPartsService {
                             highlightBuilder.field(new HighlightBuilder.Field(pcb));
                         }
                         break;
+                    case PcbPartsSearchField.TOLERANCE:
+                        for (String pcb : PcbPartsSearchField.TOLERANCE_LIST) {
+                            shouldQuery.should(matchQuery(pcb, keywords));
+                            highlightBuilder.field(new HighlightBuilder.Field(pcb));
+                        }
+                        break;
+                    case PcbPartsSearchField.OHM:
+                        for (String pcb : PcbPartsSearchField.OHM_LIST) {
+                            shouldQuery.should(matchQuery(pcb, keywords));
+                            highlightBuilder.field(new HighlightBuilder.Field(pcb));
+                        }
+                        break;
                     case PcbPartsSearchField.CONDENSER:
                         for (String pcb : PcbPartsSearchField.CONDENSER_LIST) {
                             shouldQuery.should(matchQuery(pcb, keywords));
@@ -183,10 +195,6 @@ public class PcbPartsService {
                             shouldQuery.should(matchQuery(pcb, keywords));
                             highlightBuilder.field(new HighlightBuilder.Field(pcb));
                         }
-                        break;
-                    default:
-                        shouldQuery.should(matchQuery(k, keywords));
-                        highlightBuilder.field(new HighlightBuilder.Field(k));
                         break;
                 }
             });
@@ -611,7 +619,7 @@ public class PcbPartsService {
             // tolerance
             pcbPartsSearch.setTolerance(this.excelSubService.getCellStrValue(row, 3));
             // ohm
-            pcbPartsSearch.setOhm(this.excelSubService.getCellStrValue(row, 4));
+            pcbPartsSearch.setOhm(this.parsingToPcbUnitSearch(PcbPartsSearchField.OHM, this.excelSubService.getCellStrValue(row, 4)));
             // condenser
             pcbPartsSearch.setCondenser(this.parsingToPcbUnitSearch(PcbPartsSearchField.CONDENSER, this.excelSubService.getCellStrValue(row, 5)));
             // voltage
@@ -662,7 +670,8 @@ public class PcbPartsService {
                     .replace("uv", "uV")
                     .replace("μA", "uA")
                     .replace("µA", "uA")
-                    .replace("ua", "uA");
+                    .replace("ua", "uA")
+                    .replace("Ω", "Ohm");
             if (propertyName.equals(PcbPartsSearchField.CONDENSER)) {
                 // 소문자로 변환
                 PcbPartsUtils.FaradsConvert faradsConvert = new PcbPartsUtils.FaradsConvert();
@@ -680,6 +689,14 @@ public class PcbPartsService {
                 pcbUnitSearch.setField2(tolerance.get(PcbPartsUtils.PcbConvert.Unit.PERCENT_STRING));
             }
 
+            if (propertyName.equals(PcbPartsSearchField.OHM)) {
+                PcbPartsUtils.OhmConvert ohmConvert = new PcbPartsUtils.OhmConvert();
+                Map<PcbPartsUtils.PcbConvert.Unit, String> tolerance = ohmConvert.convert(replacedString);
+                pcbUnitSearch.setField1(tolerance.get(PcbPartsUtils.PcbConvert.Unit.OHMS));
+                pcbUnitSearch.setField2(tolerance.get(PcbPartsUtils.PcbConvert.Unit.KILOHMS));
+                pcbUnitSearch.setField3(tolerance.get(PcbPartsUtils.PcbConvert.Unit.MEGAOHMS));
+            }
+
             if (propertyName.equals(PcbPartsSearchField.VOLTAGE)) {
                 PcbPartsUtils.VoltConvert voltageConvert = new PcbPartsUtils.VoltConvert();
                 Map<PcbPartsUtils.PcbConvert.Unit, String> voltage = voltageConvert.convert(replacedString);
@@ -695,6 +712,14 @@ public class PcbPartsService {
                 pcbUnitSearch.setField1(current.get(PcbPartsUtils.PcbConvert.Unit.AMPERES));
                 pcbUnitSearch.setField2(current.get(PcbPartsUtils.PcbConvert.Unit.MILLIAMPERES));
                 pcbUnitSearch.setField3(current.get(PcbPartsUtils.PcbConvert.Unit.MICROAMPERES));
+            }
+
+            if (propertyName.equals(PcbPartsSearchField.INDUCTOR)) {
+                PcbPartsUtils.InductorConvert inductorConvert = new PcbPartsUtils.InductorConvert();
+                Map<PcbPartsUtils.PcbConvert.Unit, String> inductor = inductorConvert.convert(replacedString);
+                pcbUnitSearch.setField1(inductor.get(PcbPartsUtils.PcbConvert.Unit.HENRYS));
+                pcbUnitSearch.setField2(inductor.get(PcbPartsUtils.PcbConvert.Unit.MILLIHENRYS));
+                pcbUnitSearch.setField3(inductor.get(PcbPartsUtils.PcbConvert.Unit.MICROHENRYS));
             }
         }
         return pcbUnitSearch;

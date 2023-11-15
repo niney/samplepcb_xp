@@ -151,14 +151,8 @@ public class PcbPartsSearch implements Persistable<String> {
             }
     )
     private String tolerance;
-    @MultiField(
-            mainField = @Field(type = FieldType.Text, analyzer = "samplepcb_analyzer", fielddata = true),
-            otherFields = {
-                    @InnerField(suffix = "keyword", type = FieldType.Keyword),
-                    @InnerField(suffix = "ngram", type = FieldType.Text, analyzer = "ngram_analyzer_case_insensitive", fielddata = true)
-            }
-    )
-    private String ohm;
+    @Field(type = FieldType.Object)
+    private PcbUnitSearch ohm;
     @Field(type = FieldType.Object)
     private PcbUnitSearch condenser;
     @Field(type = FieldType.Object)
@@ -464,11 +458,11 @@ public class PcbPartsSearch implements Persistable<String> {
         this.tolerance = tolerance;
     }
 
-    public String getOhm() {
+    public PcbUnitSearch getOhm() {
         return ohm;
     }
 
-    public void setOhm(String ohm) {
+    public void setOhm(PcbUnitSearch ohm) {
         this.ohm = ohm;
     }
 

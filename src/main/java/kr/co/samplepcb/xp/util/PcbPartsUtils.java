@@ -84,10 +84,12 @@ public class PcbPartsUtils {
             FARADS, MEGAFARADS, KILOFARADS, MILLIFARADS, MICROFARADS, NANOFARADS, PICOFARADS,
             PERCENT, PERCENT_STRING,
             VOLTS, KILOVOLTS, MILLIVOLTS, MICROVOLTS,
-            AMPERES, MILLIAMPERES, MICROAMPERES
+            AMPERES, MILLIAMPERES, MICROAMPERES,
+            OHMS, KILOHMS, MEGAOHMS,
+            HENRYS, MILLIHENRYS, MICROHENRYS
         }
 
-        abstract Map<PcbPartsUtils.PcbConvert.Unit, String> convert(String input);
+        abstract Map<Unit, String> convert(String input);
 
         abstract Unit determineUnit(String unitStr);
 
@@ -95,10 +97,82 @@ public class PcbPartsUtils {
 
     }
 
+    public static class OhmConvert extends PcbConvert {
+
+        @Override
+        public Map<Unit, String> convert(String input) {
+            String[] parts = input.split("(?<=\\d)(?=\\D)");
+            if (parts.length < 2) {
+                return Collections.emptyMap();
+            }
+            double value = Double.parseDouble(parts[0]);
+            Unit unit = determineUnit(parts[1]);
+            if (unit == Unit.NONE) {
+                return Collections.emptyMap();
+            }
+            // Convert to Ohms
+            double valueInOhms = convert(value, unit);
+
+            // Convert to other units
+            double valueInKilohms = convertOhmsToKilohms(valueInOhms);
+            double valueInMegaohms = convertOhmsToMegaohms(valueInOhms);
+
+            Map<Unit, String> result = new HashMap<>();
+            result.put(Unit.OHMS, stringifyDoubleWithConditionalDecimal(valueInOhms) + "ohm");
+            result.put(Unit.KILOHMS, stringifyDoubleWithConditionalDecimal(valueInKilohms) + "kohm");
+            result.put(Unit.MEGAOHMS, stringifyDoubleWithConditionalDecimal(valueInMegaohms) + "mohm");
+
+            return result;
+        }
+
+        @Override
+        Unit determineUnit(String unitStr) {
+            unitStr = unitStr.toLowerCase();
+            switch (unitStr) {
+                case "Ω":
+                case "ohm":
+                case "ohms":
+                    return Unit.OHMS;
+                case "kΩ":
+                case "kohm":
+                case "kohms":
+                    return Unit.KILOHMS;
+                case "mΩ":
+                case "mohm":
+                case "mohms":
+                    return Unit.MEGAOHMS;
+                default:
+                    return Unit.NONE;
+            }
+        }
+
+        @Override
+        double convert(double value, Unit unit) {
+            switch (unit) {
+                case OHMS:
+                    return value; // Ω to Ω
+                case KILOHMS:
+                    return value * 1_000; // kΩ to Ω
+                case MEGAOHMS:
+                    return value * 1_000_000; // MΩ to Ω
+                default:
+                    throw new IllegalArgumentException("Unknown unit: " + unit);
+            }
+        }
+
+        private static double convertOhmsToKilohms(double ohms) {
+            return ohms / 1_000; // Ω to kΩ
+        }
+
+        private static double convertOhmsToMegaohms(double ohms) {
+            return ohms / 1_000_000; // Ω to MΩ
+        }
+    }
+
     public static class FaradsConvert extends PcbConvert {
 
         @Override
-        public Map<PcbPartsUtils.PcbConvert.Unit, String> convert(String input) {
+        public Map<Unit, String> convert(String input) {
             String[] parts = input.split("(?<=\\d)(?=\\D)");
             if (parts.length < 2) {
                 return Collections.emptyMap();
@@ -363,6 +437,71 @@ public class PcbPartsUtils {
 
         private static double convertAmperesToMicroamperes(double amperes) {
             return amperes * 1_000_000; // A to µA
+        }
+    }
+
+    public static class InductorConvert extends PcbConvert {
+
+        @Override
+        public Map<Unit, String> convert(String input) {
+            String[] parts = input.split("(?<=\\d)(?=\\D)");
+            if (parts.length < 2) {
+                return Collections.emptyMap();
+            }
+            double value = Double.parseDouble(parts[0]);
+            Unit unit = determineUnit(parts[1]);
+            if (unit == Unit.NONE) {
+                return Collections.emptyMap();
+            }
+            // Convert to Henrys
+            double valueInHenrys = convert(value, unit);
+
+            // Convert to other units
+            double valueInMillihenrys = convertHenrysToMillihenrys(valueInHenrys);
+            double valueInMicrohenrys = convertHenrysToMicrohenrys(valueInHenrys);
+
+            // 결과 출력
+            Map<Unit, String> result = new HashMap<>();
+            result.put(Unit.HENRYS, stringifyDoubleWithConditionalDecimal(valueInHenrys) + "H");
+            result.put(Unit.MILLIHENRYS, stringifyDoubleWithConditionalDecimal(valueInMillihenrys) + "mH");
+            result.put(Unit.MICROHENRYS, stringifyDoubleWithConditionalDecimal(valueInMicrohenrys) + "uH");
+            return result;
+        }
+
+        @Override
+        Unit determineUnit(String unitStr) {
+            switch (unitStr) {
+                case "H":
+                    return Unit.HENRYS;
+                case "mH":
+                    return Unit.MILLIHENRYS;
+                case "µH":
+                    return Unit.MICROHENRYS;
+                default:
+                    return Unit.NONE;
+            }
+        }
+
+        @Override
+        double convert(double value, Unit unit) {
+            switch (unit) {
+                case HENRYS:
+                    return value; // H to H
+                case MILLIHENRYS:
+                    return value / 1_000; // mH to H
+                case MICROHENRYS:
+                    return value / 1_000_000; // µH to H
+                default:
+                    throw new IllegalArgumentException("Unknown unit: " + unit);
+            }
+        }
+
+        private static double convertHenrysToMillihenrys(double henrys) {
+            return henrys * 1_000; // H to mH
+        }
+
+        private static double convertHenrysToMicrohenrys(double henrys) {
+            return henrys * 1_000_000; // H to µH
         }
     }
 
