@@ -505,5 +505,34 @@ public class PcbPartsUtils {
         }
     }
 
+    // 레벤슈타인 거리 계산
+    public static int levenshteinDistance(String a, String b) {
+        int[][] dp = new int[a.length() + 1][b.length() + 1];
+
+        for (int i = 0; i <= a.length(); i++) {
+            dp[i][0] = i;
+        }
+
+        for (int j = 0; j <= b.length(); j++) {
+            dp[0][j] = j;
+        }
+
+        for (int i = 1; i <= a.length(); i++) {
+            for (int j = 1; j <= b.length(); j++) {
+                int cost = (a.charAt(i - 1) == b.charAt(j - 1)) ? 0 : 1;
+                dp[i][j] = Math.min(Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1), dp[i - 1][j - 1] + cost);
+            }
+        }
+
+        return dp[a.length()][b.length()];
+    }
+
+    // 유사도 점수 (백분율)로 변환
+    public static double similarityScorePercentage(String a, String b) {
+        int maxLength = Math.max(a.length(), b.length());
+        if (maxLength == 0) return 100.0; // 두 문자열 모두 비어있는 경우
+        return (1.0 - (double) levenshteinDistance(a, b) / maxLength) * 100;
+    }
+
 
 }

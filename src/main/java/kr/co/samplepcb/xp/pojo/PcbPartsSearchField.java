@@ -92,6 +92,7 @@ public class PcbPartsSearchField {
     public static final List<String> VOLTAGE_LIST = Arrays.asList(VOLTAGE_FIELD1, VOLTAGE_FIELD2, VOLTAGE_FIELD3, VOLTAGE_FIELD4, VOLTAGE_FIELD5);
     public static final String TEMPERATURE = "temperature";
     public static final String SIZE = "size";
+    public static final String SIZE_KEYWORD = "size.keyword";
     public static final String CURRENT = "current";
     public static final String CURRENT_FIELD1 = "current.field1";
     public static final String CURRENT_FIELD2 = "current.field2";
@@ -106,5 +107,58 @@ public class PcbPartsSearchField {
     public static final String INDUCTOR_FIELD4 = "inductor.field4";
     public static final String INDUCTOR_FIELD5 = "inductor.field5";
     public static final List<String> INDUCTOR_LIST = Arrays.asList(INDUCTOR_FIELD1, INDUCTOR_FIELD2, INDUCTOR_FIELD3, INDUCTOR_FIELD4, INDUCTOR_FIELD5);
+    public static final String KEYWORD_SUFFIX = ".keyword";
+    // Append ".keyword" to field + 숫자 strings
+    public static final String WATT_FIELD1_KEYWORD = WATT_FIELD1 + KEYWORD_SUFFIX;
+    public static final String WATT_FIELD2_KEYWORD = WATT_FIELD2 + KEYWORD_SUFFIX;
+    public static final String WATT_FIELD3_KEYWORD = WATT_FIELD3 + KEYWORD_SUFFIX;
+    public static final String WATT_FIELD4_KEYWORD = WATT_FIELD4 + KEYWORD_SUFFIX;
+    public static final String WATT_FIELD5_KEYWORD = WATT_FIELD5 + KEYWORD_SUFFIX;
+    public static final List<String> WATT_KEYWORD_LIST = Arrays.asList(WATT_FIELD1_KEYWORD, WATT_FIELD2_KEYWORD, WATT_FIELD3_KEYWORD, WATT_FIELD4_KEYWORD, WATT_FIELD5_KEYWORD);
+
+    public static final String TOLERANCE_FIELD1_KEYWORD = TOLERANCE_FIELD1 + KEYWORD_SUFFIX;
+    public static final String TOLERANCE_FIELD2_KEYWORD = TOLERANCE_FIELD2 + KEYWORD_SUFFIX;
+    public static final String TOLERANCE_FIELD3_KEYWORD = TOLERANCE_FIELD3 + KEYWORD_SUFFIX;
+    public static final String TOLERANCE_FIELD4_KEYWORD = TOLERANCE_FIELD4 + KEYWORD_SUFFIX;
+    public static final String TOLERANCE_FIELD5_KEYWORD = TOLERANCE_FIELD5 + KEYWORD_SUFFIX;
+    public static final List<String> TOLERANCE_KEYWORD_LIST = Arrays.asList(TOLERANCE_FIELD1_KEYWORD, TOLERANCE_FIELD2_KEYWORD, TOLERANCE_FIELD3_KEYWORD, TOLERANCE_FIELD4_KEYWORD, TOLERANCE_FIELD5_KEYWORD);
+
+    public static final String OHM_FIELD1_KEYWORD = OHM_FIELD1 + KEYWORD_SUFFIX;
+    public static final String OHM_FIELD2_KEYWORD = OHM_FIELD2 + KEYWORD_SUFFIX;
+    public static final String OHM_FIELD3_KEYWORD = OHM_FIELD3 + KEYWORD_SUFFIX;
+    public static final String OHM_FIELD4_KEYWORD = OHM_FIELD4 + KEYWORD_SUFFIX;
+    public static final String OHM_FIELD5_KEYWORD = OHM_FIELD5 + KEYWORD_SUFFIX;
+    public static final List<String> OHM_KEYWORD_LIST = Arrays.asList(OHM_FIELD1_KEYWORD, OHM_FIELD2_KEYWORD, OHM_FIELD3_KEYWORD, OHM_FIELD4_KEYWORD, OHM_FIELD5_KEYWORD);
+
+    public static final String CONDENSER_FIELD1_KEYWORD = CONDENSER_FIELD1 + KEYWORD_SUFFIX;
+    public static final String CONDENSER_FIELD2_KEYWORD = CONDENSER_FIELD2 + KEYWORD_SUFFIX;
+    public static final String CONDENSER_FIELD3_KEYWORD = CONDENSER_FIELD3 + KEYWORD_SUFFIX;
+    public static final String CONDENSER_FIELD4_KEYWORD = CONDENSER_FIELD4 + KEYWORD_SUFFIX;
+    public static final String CONDENSER_FIELD5_KEYWORD = CONDENSER_FIELD5 + KEYWORD_SUFFIX;
+    public static final List<String> CONDENSER_KEYWORD_LIST = Arrays.asList(CONDENSER_FIELD1_KEYWORD, CONDENSER_FIELD2_KEYWORD, CONDENSER_FIELD3_KEYWORD, CONDENSER_FIELD4_KEYWORD, CONDENSER_FIELD5_KEYWORD);
+
+    public static final String VOLTAGE_FIELD1_KEYWORD = VOLTAGE_FIELD1 + KEYWORD_SUFFIX;
+    public static final String VOLTAGE_FIELD2_KEYWORD = VOLTAGE_FIELD2 + KEYWORD_SUFFIX;
+    public static final String VOLTAGE_FIELD3_KEYWORD = VOLTAGE_FIELD3 + KEYWORD_SUFFIX;
+    public static final String VOLTAGE_FIELD4_KEYWORD = VOLTAGE_FIELD4 + KEYWORD_SUFFIX;
+    public static final String VOLTAGE_FIELD5_KEYWORD = VOLTAGE_FIELD5 + KEYWORD_SUFFIX;
+    public static final List<String> VOLTAGE_KEYWORD_LIST = Arrays.asList(VOLTAGE_FIELD1_KEYWORD, VOLTAGE_FIELD2_KEYWORD, VOLTAGE_FIELD3_KEYWORD, VOLTAGE_FIELD4_KEYWORD, VOLTAGE_FIELD5_KEYWORD);
+
+    public static final String CURRENT_FIELD1_KEYWORD = CURRENT_FIELD1 + KEYWORD_SUFFIX;
+    public static final String CURRENT_FIELD2_KEYWORD = CURRENT_FIELD2 + KEYWORD_SUFFIX;
+    public static final String CURRENT_FIELD3_KEYWORD = CURRENT_FIELD3 + KEYWORD_SUFFIX;
+    public static final String CURRENT_FIELD4_KEYWORD = CURRENT_FIELD4 + KEYWORD_SUFFIX;
+    public static final String CURRENT_FIELD5_KEYWORD = CURRENT_FIELD5 + KEYWORD_SUFFIX;
+    public static final List<String> CURRENT_KEYWORD_LIST = Arrays.asList(CURRENT_FIELD1_KEYWORD, CURRENT_FIELD2_KEYWORD, CURRENT_FIELD3_KEYWORD, CURRENT_FIELD4_KEYWORD, CURRENT_FIELD5_KEYWORD);
+
+    public static final String INDUCTOR_FIELD1_KEYWORD = INDUCTOR_FIELD1 + KEYWORD_SUFFIX;
+    public static final String INDUCTOR_FIELD2_KEYWORD = INDUCTOR_FIELD2 + KEYWORD_SUFFIX;
+    public static final String INDUCTOR_FIELD3_KEYWORD = INDUCTOR_FIELD3 + KEYWORD_SUFFIX;
+    public static final String INDUCTOR_FIELD4_KEYWORD = INDUCTOR_FIELD4 + KEYWORD_SUFFIX;
+    public static final String INDUCTOR_FIELD5_KEYWORD = INDUCTOR_FIELD5 + KEYWORD_SUFFIX;
+    public static final List<String> INDUCTOR_KEYWORD_LIST = Arrays.asList(INDUCTOR_FIELD1_KEYWORD, INDUCTOR_FIELD2_KEYWORD, INDUCTOR_FIELD3_KEYWORD, INDUCTOR_FIELD4_KEYWORD, INDUCTOR_FIELD5_KEYWORD);
     public static final String PRODUCT_NAME = "productName";
+    public static final String PASSIVE_COMPONENTS = "Passive Components";
+    public static final String CAPACITORS = "Capacitors";
+    public static final String RESISTORS = "Resistors";
 }

@@ -84,7 +84,7 @@ public class CoolElasticUtils {
                 String fragments = Arrays.stream(highlightField.getFragments()).map(s -> String.format("%s ...", s)).collect(Collectors.joining());
                 hfList.put(field, fragments);
             });
-            if (hfList.size() > 0) {
+            if (!hfList.isEmpty()) {
                 sourceAsMap.put(highlightFields, hfList);
             }
             sourceList.add(sourceAsMap);

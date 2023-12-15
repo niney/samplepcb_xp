@@ -1,6 +1,7 @@
 package kr.co.samplepcb.xp.service;
 
 import coolib.common.CCObjectResult;
+import coolib.common.CCPagingResult;
 import coolib.common.CCResult;
 import coolib.common.QueryParam;
 import coolib.util.CommonUtils;
@@ -10,6 +11,7 @@ import kr.co.samplepcb.xp.domain.PcbPartsSearch;
 import kr.co.samplepcb.xp.domain.PcbUnitSearch;
 import kr.co.samplepcb.xp.pojo.*;
 import kr.co.samplepcb.xp.pojo.adapter.PagingAdapter;
+import kr.co.samplepcb.xp.pojo.common.CCPagingExtResult;
 import kr.co.samplepcb.xp.repository.PcbKindSearchRepository;
 import kr.co.samplepcb.xp.repository.PcbPartsSearchRepository;
 import kr.co.samplepcb.xp.service.common.sub.DataExtractorSubService;
@@ -41,6 +43,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.util.*;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
@@ -133,65 +138,70 @@ public class PcbPartsService {
         return CCObjectResult.setSimpleData(this.pcbPartsSearchRepository.save(pcbPartsSearch));
     }
 
-    @SuppressWarnings({"rawtypes"})
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public CCResult search(Pageable pageable, QueryParam queryParam, PcbPartsSearchVM pcbPartsSearchVM) {
         BoolQueryBuilder query = boolQuery();
         HighlightBuilder highlightBuilder = new HighlightBuilder();
         BoolQueryBuilder queryBuilder;
-        if(StringUtils.isNotEmpty(queryParam.getQ()) && !queryParam.getQf().equals("parsing")) {
+        if(StringUtils.isNotEmpty(queryParam.getQ()) && (StringUtils.isEmpty(queryParam.getQf()) || !queryParam.getQf().equals("parsing"))) {
             this.pcbPartsSearchRepository.makeWildcardPermitFieldQuery(queryParam.getQf(), queryParam.getQ(), query, highlightBuilder);
         }
         queryBuilder = this.pcbPartsSearchRepository.searchByColumnSearch(pcbPartsSearchVM, queryParam, query, highlightBuilder);
 
         // parsing
-        if (StringUtils.isNotEmpty(queryParam.getQf()) && queryParam.getQf().equals("parsing")) {
-            boolean hasSize = false;
+        Map<String, List<String>> parsedKeywords = new HashMap<>();
+        String extractedSize = "";
+        boolean parsing = StringUtils.isNotEmpty(queryParam.getQf()) && queryParam.getQf().equals("parsing");
+        if (parsing) {
             BoolQueryBuilder shouldQuery = boolQuery();
             String q = queryParam.getQ();
-            shouldQuery.should(matchQuery(PcbPartsSearchField.PART_NAME, q));
             highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.PART_NAME));
-            Map<String, List<String>> parsedKeywords = PcbPartsUtils.parseString(queryParam.getQ());
+            parsedKeywords = PcbPartsUtils.parseString(queryParam.getQ());
             parsedKeywords.forEach((k, v) -> {
                 String keywords = String.join(" ", v);
                 switch (k) {
                     case PcbPartsSearchField.WATT:
-                        for (String pcb : PcbPartsSearchField.WATT_LIST) {
+                        for (String pcb : PcbPartsSearchField.WATT_KEYWORD_LIST) {
                             shouldQuery.should(matchQuery(pcb, keywords));
                             highlightBuilder.field(new HighlightBuilder.Field(pcb));
                         }
                         break;
                     case PcbPartsSearchField.TOLERANCE:
-                        for (String pcb : PcbPartsSearchField.TOLERANCE_LIST) {
+                        for (String pcb : PcbPartsSearchField.TOLERANCE_KEYWORD_LIST) {
                             shouldQuery.should(matchQuery(pcb, keywords));
                             highlightBuilder.field(new HighlightBuilder.Field(pcb));
                         }
                         break;
                     case PcbPartsSearchField.OHM:
-                        for (String pcb : PcbPartsSearchField.OHM_LIST) {
+                        queryBuilder.filter(matchQuery(PcbPartsSearchField.LARGE_CATEGORY, PcbPartsSearchField.PASSIVE_COMPONENTS));
+                        queryBuilder.filter(matchQuery(PcbPartsSearchField.MEDIUM_CATEGORY, PcbPartsSearchField.RESISTORS));
+                        for (String pcb : PcbPartsSearchField.OHM_KEYWORD_LIST) {
                             shouldQuery.should(matchQuery(pcb, keywords));
                             highlightBuilder.field(new HighlightBuilder.Field(pcb));
                         }
                         break;
                     case PcbPartsSearchField.CONDENSER:
-                        for (String pcb : PcbPartsSearchField.CONDENSER_LIST) {
+                        queryBuilder.filter(matchQuery(PcbPartsSearchField.LARGE_CATEGORY, PcbPartsSearchField.PASSIVE_COMPONENTS));
+                        queryBuilder.filter(matchQuery(PcbPartsSearchField.MEDIUM_CATEGORY, PcbPartsSearchField.CAPACITORS));
+                        for (String pcb : PcbPartsSearchField.CONDENSER_KEYWORD_LIST) {
                             shouldQuery.should(matchQuery(pcb, keywords));
                             highlightBuilder.field(new HighlightBuilder.Field(pcb));
                         }
                         break;
                     case PcbPartsSearchField.VOLTAGE:
-                        for (String pcb : PcbPartsSearchField.VOLTAGE_LIST) {
+                        for (String pcb : PcbPartsSearchField.VOLTAGE_KEYWORD_LIST) {
                             shouldQuery.should(matchQuery(pcb, keywords));
                             highlightBuilder.field(new HighlightBuilder.Field(pcb));
                         }
                         break;
                     case PcbPartsSearchField.CURRENT:
-                        for (String pcb : PcbPartsSearchField.CURRENT_LIST) {
+                        for (String pcb : PcbPartsSearchField.CURRENT_KEYWORD_LIST) {
                             shouldQuery.should(matchQuery(pcb, keywords));
                             highlightBuilder.field(new HighlightBuilder.Field(pcb));
                         }
                         break;
                     case PcbPartsSearchField.INDUCTOR:
-                        for (String pcb : PcbPartsSearchField.INDUCTOR_LIST) {
+                        for (String pcb : PcbPartsSearchField.INDUCTOR_KEYWORD_LIST) {
                             shouldQuery.should(matchQuery(pcb, keywords));
                             highlightBuilder.field(new HighlightBuilder.Field(pcb));
                         }
@@ -199,10 +209,37 @@ public class PcbPartsService {
                 }
             });
             // size
-            String extractedSize = this.dataExtractorSubService.extractSizeFromTitle(queryParam.getQ());
+            extractedSize = this.dataExtractorSubService.extractSizeFromTitle(queryParam.getQ());
             if (parsedKeywords.get(PcbPartsSearchField.SIZE) == null && StringUtils.isNotEmpty(extractedSize)) {
-                shouldQuery.should(matchQuery(PcbPartsSearchField.SIZE, extractedSize));
-                highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.SIZE));
+                shouldQuery.should(matchQuery(PcbPartsSearchField.SIZE_KEYWORD, extractedSize));
+                highlightBuilder.field(new HighlightBuilder.Field(PcbPartsSearchField.SIZE_KEYWORD));
+            }
+            if (parsedKeywords.get(PcbPartsSearchField.OHM) != null) {
+                // ohm 이 있다면 Resistor(저항)으로 판단 오차범위는 필수 이다
+                if (CollectionUtils.isEmpty(parsedKeywords.get(PcbPartsSearchField.TOLERANCE))) {
+                    // 오차범위가 없다면
+                    CCPagingResult<Object> ccPagingResult = PagingAdapter.toCCPagingResult(pageable, new ArrayList<>(), 0);
+                    ccPagingResult.setMessage("오차범위 정보가 없습니다.");
+                    return ccPagingResult;
+                }
+            }
+            if (parsedKeywords.get(PcbPartsSearchField.CONDENSER) != null) {
+                // condenser(콘덴서) 있다면 Capacitor(커패시터)로 판단 하고 전압은 필수 이다
+                if (CollectionUtils.isEmpty(parsedKeywords.get(PcbPartsSearchField.VOLTAGE))) {
+                    // 전압이 없다면
+                    CCPagingResult<Object> ccPagingResult = PagingAdapter.toCCPagingResult(pageable, new ArrayList<>(), 0);
+                    ccPagingResult.setMessage("전압 정보가 없습니다.");
+                    return ccPagingResult;
+                }
+            }
+            int parsedWithoutProductNameAndSize = checkSizeWithoutProductNameAndSize(parsedKeywords);
+            if (StringUtils.isNotEmpty(extractedSize)) {
+                parsedWithoutProductNameAndSize += 1;
+            }
+            if (parsedWithoutProductNameAndSize < 2) {
+                CCPagingResult<Object> ccPagingResult = PagingAdapter.toCCPagingResult(pageable, new ArrayList<>(), 0);
+                ccPagingResult.setMessage("2개 이상의 값이 필요합니다.");
+                return ccPagingResult;
             }
             queryBuilder.must(shouldQuery);
         }
@@ -272,7 +309,69 @@ public class PcbPartsService {
             }
         }
 
-        return PagingAdapter.toCCPagingResult(pageable, respData, response.getHits().getTotalHits().value);
+        CCPagingResult<Map<String, Object>> ccPagingResult = PagingAdapter.toCCPagingResult(pageable, respData, response.getHits().getTotalHits().value);
+        if (parsing) {
+            if (StringUtils.isNoneBlank(extractedSize)) {
+                parsedKeywords.remove(PcbPartsSearchField.PRODUCT_NAME);
+                parsedKeywords.put(PcbPartsSearchField.SIZE, Collections.singletonList(extractedSize));
+            }
+            CCPagingExtResult<Map<String, Object>, Map<String, List<String>>> ccPagingExtResult = new CCPagingExtResult<>();
+            BeanUtils.copyProperties(ccPagingResult, ccPagingExtResult);
+            ccPagingExtResult.setExtraData(parsedKeywords);
+            for (Map<String, Object> respDatum : respData) {
+                Object highlightFieldsObj = respDatum.get(CoolElasticUtils.highlightFields);
+                if (highlightFieldsObj instanceof Map) {
+                    int matchCnt = 0;
+                    Map<String, Object> highlightFieldsMap = (Map<String, Object>) highlightFieldsObj;
+                    // ohm 이 있다면 Resistor(저항)으로 판단 오차범위는 필수 이다
+                    if (parsedKeywords.get(PcbPartsSearchField.OHM) != null) {
+                        boolean hasCondenser = highlightFieldsMap.keySet().stream().anyMatch(k -> k.toLowerCase().contains(PcbPartsSearchField.OHM.toLowerCase()));
+                        if (hasCondenser) {
+                            matchCnt++;
+                        }
+                        boolean hasVoltage = highlightFieldsMap.keySet().stream().anyMatch(k -> k.toLowerCase().contains(PcbPartsSearchField.TOLERANCE.toLowerCase()));
+                        if (hasVoltage) {
+                            matchCnt++;
+                        }
+                    }
+                    // condenser(콘덴서) 있다면 Capacitor(커패시터)로 판단 하고 전압은 필수 이다
+                    if (parsedKeywords.get(PcbPartsSearchField.CONDENSER) != null) {
+                        boolean hasCondenser = highlightFieldsMap.keySet().stream().anyMatch(k -> k.toLowerCase().contains(PcbPartsSearchField.CONDENSER.toLowerCase()));
+                        if (hasCondenser) {
+                            matchCnt++;
+                        }
+                        boolean hasVoltage = highlightFieldsMap.keySet().stream().anyMatch(k -> k.toLowerCase().contains(PcbPartsSearchField.VOLTAGE.toLowerCase()));
+                        if (hasVoltage) {
+                            matchCnt++;
+                        }
+                    }
+                    if (matchCnt >= 2) {
+                        break;
+                    }
+                    CCPagingResult<Object> emptyResult = PagingAdapter.toCCPagingResult(pageable, new ArrayList<>(), 0);
+                    CCPagingExtResult<Map<String, Object>, Map<String, List<String>>> emptyExtResult = new CCPagingExtResult<>();
+                    BeanUtils.copyProperties(emptyResult, emptyExtResult);
+                    emptyExtResult.setExtraData(parsedKeywords);
+                    emptyExtResult.setMessage("2개 이상 매치되는 결과가 없습니다.");
+                    return emptyExtResult;
+                }
+            }
+            return ccPagingExtResult;
+        }
+        return ccPagingResult;
+    }
+
+    /**
+     * Calculates the size of the given parsedKeywords map after removing the entry with the key "PRODUCT_NAME".
+     *
+     * @param parsedKeywords The map of keywords where each key corresponds to a list of values.
+     * @return The size of the parsedKeywords map after removing the entry with the key "PRODUCT_NAME", "SIZE".
+     */
+    private static int checkSizeWithoutProductNameAndSize(Map<String, List<String>> parsedKeywords) {
+        HashMap<String, List<String>> copyParsedKeywords = new HashMap<>(parsedKeywords);
+        copyParsedKeywords.remove(PcbPartsSearchField.PRODUCT_NAME);
+        copyParsedKeywords.remove(PcbPartsSearchField.SIZE);
+        return copyParsedKeywords.size();
     }
 
     public CCResult deleteParts(List<String> ids) {
@@ -560,7 +659,7 @@ public class PcbPartsService {
         }
     }
 
-    private void excelIndexingByEleparts(XSSFWorkbook workbook, int sheetAt) {
+    private void excelIndexingByEleparts(XSSFWorkbook workbook, int sheetAt, String category) {
         XSSFSheet sheet = workbook.getSheetAt(sheetAt); // 해당 엑셀파일의 시트(Sheet) 수
         int rows = sheet.getPhysicalNumberOfRows(); // 해당 시트의 행의 개수
         List<PcbPartsSearch> pcbPartsSearchList = new ArrayList<>();
@@ -589,11 +688,30 @@ public class PcbPartsService {
 //            String largeCategory = checkPcbKindExistForCategory(row, 1, PcbPartsSearchField.LARGE_CATEGORY);
 //            String mediumCategory = checkPcbKindExistForCategory(row, 2, PcbPartsSearchField.MEDIUM_CATEGORY);
 //            String smallCategory = checkPcbKindExistForCategory(row, 3, PcbPartsSearchField.SMALL_CATEGORY);
+
+            PcbPartsSearch pcbPartsSearch = new PcbPartsSearch();
+            String largeCategory = "";
+            String mediumCategory = "";
+            // category 00020002 or 00020004라면 largeCategory 값은 Passive Components
+            if(category.equals("00020002") || category.equals("00020004")) {
+                largeCategory = PcbPartsSearchField.PASSIVE_COMPONENTS;
+                pcbPartsSearch.setLargeCategory(largeCategory);
+            }
+            // category 00020002 이라면  mediumCategory 값은 Capacitors
+            if(category.equals("00020002")) {
+                mediumCategory = PcbPartsSearchField.CAPACITORS;
+                pcbPartsSearch.setMediumCategory(mediumCategory);
+            }
+            // category 00020004 이라면  mediumCategory 값은 Resistors
+            if(category.equals("00020004")) {
+                mediumCategory = PcbPartsSearchField.RESISTORS;
+                pcbPartsSearch.setMediumCategory(mediumCategory);
+            }
+
             String manufacturerName = checkPcbKindExistForCategory(targetPcbKindSearchMap, row, 12, PcbPartsSearchField.MANUFACTURER_NAME);
             String packaging = checkPcbKindExistForCategory(targetPcbKindSearchMap, row, 8, PcbPartsSearchField.PACKAGING);
 //            String offerName = checkPcbKindExistForCategory(targetPcbKindSearchMap, row, 17, PcbPartsSearchField.OFFER_NAME);
 
-            PcbPartsSearch pcbPartsSearch = new PcbPartsSearch();
 //            pcbPartsSearch.setLargeCategory(largeCategory);
 //            pcbPartsSearch.setMediumCategory(mediumCategory);
 //            pcbPartsSearch.setSmallCategory(smallCategory);
@@ -738,12 +856,22 @@ public class PcbPartsService {
     }
 
     public void indexAllByEleparts(MultipartFile file) {
+        String fileName = file.getOriginalFilename();
+        String category = "";
+        if (fileName != null) {
+            Pattern pattern = Pattern.compile("(\\d+)");
+            Matcher matcher = pattern.matcher(fileName);
+            if (matcher.find()) {
+                category = matcher.group(1);
+            }
+
+        }
 //        this.pcbPartsSearchRepository.deleteAll();
         XSSFWorkbook workbook = null;
         try {
             workbook = new XSSFWorkbook(file.getInputStream());
             for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-                excelIndexingByEleparts(workbook, i);
+                excelIndexingByEleparts(workbook, i, category);
             }
         } catch (Exception e) {
             log.error(CommonUtils.getFullStackTrace(e));

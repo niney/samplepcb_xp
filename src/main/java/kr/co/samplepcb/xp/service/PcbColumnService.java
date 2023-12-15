@@ -251,12 +251,14 @@ public class PcbColumnService {
         // 검색된 정보
         List<Double> scoreList = new ArrayList<>();
         List<PcbColumnSearchVM> totalPcbColumnSearchList = new ArrayList<>();
+        int emptyStrCnt = 0;
         for (int i = 0; i < vectors.size(); i++) {
             String columnName = columnNameList.get(i);
             if(StringUtils.isEmpty(columnName)) {
                 PcbColumnSearchVM pcbVm = new PcbColumnSearchVM();
                 pcbVm.setColumnIdx(i);
                 totalPcbColumnSearchList.add(pcbVm);
+                emptyStrCnt++;
                 continue;
             }
             CCPagingResult<PcbColumnSearch> sentenceResult = this.searchSentenceScore(pageable, vectors.get(i), columnName);
@@ -275,6 +277,7 @@ public class PcbColumnService {
         }
         // 평균점수
         double averageScore = scoreList.stream().mapToDouble(v -> v).average().orElse(0);
+        averageScore = averageScore - emptyStrCnt;
 
         pcbSentenceVM.setPcbColumnSearchList(totalPcbColumnSearchList);
         pcbSentenceVM.setAverageScore(averageScore);

@@ -18,6 +18,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collections;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/pcbItem")
@@ -47,6 +48,11 @@ public class PcbItemResource {
     @GetMapping("/_search")
     public CCResult search(@PageableDefault Pageable pageable, QueryParam queryParam, PcbItemSearchVM pcbColumnSearchVM) {
         return this.pcbItemService.search(pageable, queryParam, pcbColumnSearchVM);
+    }
+
+    @PostMapping("/_searchList")
+    public CCResult searchList(@PageableDefault Pageable pageable, QueryParam queryParam, int target, @RequestBody List<String> pcbItemNameList) {
+        return this.pcbItemService.searchList(pageable, queryParam, target, pcbItemNameList);
     }
 
     @PostMapping("/_indexing")

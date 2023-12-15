@@ -1,19 +1,21 @@
 package kr.co.samplepcb.xp.service;
 
-import coolib.common.CCObjectResult;
-import coolib.common.CCResult;
-import coolib.common.QueryParam;
+import coolib.common.*;
 import coolib.util.CommonUtils;
 import kr.co.samplepcb.xp.domain.OctopartForSearch;
 import kr.co.samplepcb.xp.domain.PcbItemSearch;
 import kr.co.samplepcb.xp.pojo.ElasticIndexName;
 import kr.co.samplepcb.xp.pojo.OctopartVM;
+import kr.co.samplepcb.xp.pojo.PcbItemSearchField;
 import kr.co.samplepcb.xp.pojo.PcbItemSearchVM;
 import kr.co.samplepcb.xp.pojo.adapter.PagingAdapter;
 import kr.co.samplepcb.xp.repository.PcbItemSearchRepository;
 import kr.co.samplepcb.xp.service.common.sub.ExcelSubService;
 import kr.co.samplepcb.xp.service.common.sub.MlOctopartSubService;
 import kr.co.samplepcb.xp.util.CoolElasticUtils;
+import kr.co.samplepcb.xp.util.PcbPartsUtils;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -171,7 +173,6 @@ public class PcbItemService {
         HighlightBuilder highlightBuilder = new HighlightBuilder();
         QueryBuilder queryBuilder = this.pcbItemSearchRepository.searchByColumnSearch(pcbColumnSearchVM, queryParam, query, highlightBuilder);
 
-
         SearchResponse response = CoolElasticUtils.search(
                 this.restHighLevelClient,
                 queryBuilder,
@@ -183,7 +184,31 @@ public class PcbItemService {
                 request -> request.indices(ElasticIndexName.PCB_ITEM)
         );
 
-        return PagingAdapter.toCCPagingResult(pageable, CoolElasticUtils.getSourceWithHighlightDetailInline(response), response.getHits().getTotalHits().value);
+        List<Map<String, Object>> sourceResponse = CoolElasticUtils.getSourceWithHighlightDetailInline(response);
+        if (CollectionUtils.isNotEmpty(sourceResponse) && StringUtils.isNotEmpty(queryParam.getQ())) {
+            Map<String, Object> item = sourceResponse.get(0);
+            String itemName = (String) item.get(PcbItemSearchField.ITEM_NAME_TEXT);
+            item.put("query", queryParam.getQ());
+            item.put(PcbItemSearchField._SCORE, PcbPartsUtils.similarityScorePercentage(queryParam.getQ(), itemName));
+        }
+
+        return PagingAdapter.toCCPagingResult(pageable, sourceResponse, response.getHits().getTotalHits().value);
+    }
+
+    @SuppressWarnings("unchecked")
+    public CCResult searchList(Pageable pageable, QueryParam queryParam, int target, List<String> pcbItemNameList) {
+        List<Map<String, Object>> resultList = new ArrayList<>();
+        for (String itemName : pcbItemNameList) {
+            PcbItemSearchVM pcbItemSearchVM = new PcbItemSearchVM();
+            pcbItemSearchVM.setTarget(target);
+            queryParam.setQ(itemName);
+            CCPagingResult<Map<String, Object>> ccPagingResult = (CCPagingResult<Map<String, Object>>) this.search(pageable, queryParam, pcbItemSearchVM);
+            List<Map<String, Object>> data = ccPagingResult.getData();
+            if (!data.isEmpty()) {
+                resultList.add(data.get(0));
+            }
+        }
+        return CCObjectResult.setSimpleData(resultList);
     }
 
     public CCResult indexing(PcbItemSearchVM pcbItemSearchVM) {
